@@ -1,0 +1,117 @@
+/* Roller enligt referenspaletten (dataviz); mörkt läge byter värden på ett ställe. */
+:root {
+  --page:           #f9f9f7;
+  --surface-1:      #fcfcfb;
+  --text-primary:   #0b0b0b;
+  --text-secondary: #52514e;
+  --text-muted:     #898781;
+  --gridline:       #e1e0d9;
+  --baseline:       #c3c2b7;
+  --border:         rgba(11, 11, 11, 0.10);
+  --series-1:       #2a78d6;  /* Ventil 1 — blå */
+  --series-2:       #1baf7a;  /* Ventil 2 — aqua */
+  --accent:         #2a78d6;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --page:           #0d0d0d;
+    --surface-1:      #1a1a19;
+    --text-primary:   #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted:     #898781;
+    --gridline:       #2c2c2a;
+    --baseline:       #383835;
+    --border:         rgba(255, 255, 255, 0.10);
+    --series-1:       #3987e5;
+    --series-2:       #199e70;
+    --accent:         #3987e5;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: var(--page);
+  color: var(--text-primary);
+}
+
+.viz-root { max-width: 56rem; margin: 0 auto; padding: 1rem 1rem 3rem; }
+
+h1 { font-size: 1.5rem; margin: 0.5rem 0 0; }
+h2 { font-size: 1.05rem; margin: 0 0 0.75rem; display: flex; align-items: center; gap: 0.5rem; }
+
+.muted { color: var(--text-muted); font-size: 0.85rem; }
+
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 1rem; margin: 1rem 0; }
+
+.card {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.swatch { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+.swatch-1 { background: var(--series-1); }
+.swatch-2 { background: var(--series-2); }
+
+form input[type="time"], form input[type="number"] {
+  padding: 0.4rem;
+  border: 1px solid var(--baseline); border-radius: 6px;
+  background: var(--page); color: var(--text-primary); font: inherit;
+}
+
+.entry-head, .entry-row {
+  display: grid;
+  grid-template-columns: 1fr 4.5rem 2rem 2rem;
+  gap: 0.5rem;
+  align-items: center;
+  margin: 0.4rem 0;
+}
+.entry-head { color: var(--text-muted); font-size: 0.8rem; margin-bottom: 0; }
+.entry-row input[type="number"] { width: 100%; }
+.entry-row input[type="checkbox"] { justify-self: center; }
+.entry-row .remove {
+  background: none; border: none; color: var(--text-muted);
+  font-size: 1.1rem; padding: 0.2rem; cursor: pointer;
+}
+.entry-row .remove:hover { color: #d03b3b; }
+.entries:empty::after {
+  content: "Inga bevattningar schemalagda.";
+  color: var(--text-muted); font-size: 0.85rem;
+}
+
+button.ghost {
+  background: none; color: var(--accent);
+  border: 1px dashed var(--baseline);
+  display: block; width: 100%; margin: 0.5rem 0 0.75rem;
+}
+
+button {
+  padding: 0.5rem 1.25rem; border: none; border-radius: 6px;
+  background: var(--accent); color: #fff; font: inherit; cursor: pointer;
+}
+button:disabled { opacity: 0.5; cursor: default; }
+
+.save-status { min-height: 1.2em; margin: 0.5rem 0 0; }
+.save-status.ok { color: var(--series-2); }
+.save-status.err { color: #d03b3b; }
+
+.master-card { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+.master { display: flex; align-items: center; gap: 0.5rem; font-size: 1.05rem; }
+.master input { width: 1.1rem; height: 1.1rem; }
+#irrigation-status.off { color: #d03b3b; font-weight: 600; }
+.master-card .sensor { margin-left: auto; }
+#sensor-status.wet { color: #d03b3b; font-weight: 600; }
+
+.chart-wrap { position: relative; height: 320px; }
+
+.table-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+th { text-align: left; color: var(--text-muted); font-weight: 600; }
+th, td { padding: 0.4rem 0.75rem 0.4rem 0; border-bottom: 1px solid var(--gridline); }
+td.num { font-variant-numeric: tabular-nums; }

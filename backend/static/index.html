@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bevattning</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+</head>
+<body>
+<main class="viz-root">
+  <header>
+    <h1>Bevattning</h1>
+    <p id="mqtt-status" class="muted">Kontrollerar anslutning …</p>
+  </header>
+
+  <section class="card master-card">
+    <label class="master">
+      <input type="checkbox" id="irrigation-toggle" disabled>
+      <strong>Bevattning</strong>
+    </label>
+    <span id="irrigation-status" class="muted" role="status">hämtar …</span>
+    <span id="sensor-status" class="muted sensor" role="status"></span>
+  </section>
+
+  <section class="cards">
+    <form class="card" data-valve="1">
+      <h2><span class="swatch swatch-1"></span>Ventil 1</h2>
+      <div class="entry-head"><span>Start</span><span>Min</span><span>På</span><span></span></div>
+      <div class="entries"></div>
+      <button type="button" class="add-entry ghost">+ Lägg till bevattning</button>
+      <button type="submit">Spara</button>
+      <p class="save-status muted" role="status"></p>
+    </form>
+
+    <form class="card" data-valve="2">
+      <h2><span class="swatch swatch-2"></span>Ventil 2</h2>
+      <div class="entry-head"><span>Start</span><span>Min</span><span>På</span><span></span></div>
+      <div class="entries"></div>
+      <button type="button" class="add-entry ghost">+ Lägg till bevattning</button>
+      <button type="submit">Spara</button>
+      <p class="save-status muted" role="status"></p>
+    </form>
+  </section>
+
+  <section class="card chart-card">
+    <h2>Senaste 7 dagarna</h2>
+    <p class="muted">När och hur länge bevattningen varit igång (lokal tid).</p>
+    <div class="chart-wrap"><canvas id="history-chart" aria-label="Bevattningshistorik senaste 7 dagarna" role="img"></canvas></div>
+  </section>
+
+  <section class="card">
+    <h2>Körningar</h2>
+    <div class="table-wrap">
+      <table id="history-table">
+        <thead><tr><th>Ventil</th><th>Datum</th><th>Start</th><th>Stopp</th><th>Längd</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <p id="table-empty" class="muted" hidden>Inga körningar de senaste 7 dagarna.</p>
+  </section>
+</main>
+<script src="app.js"></script>
+</body>
+</html>

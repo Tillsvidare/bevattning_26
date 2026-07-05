@@ -1,0 +1,12 @@
+# Enhets-/körningslokalt — får aldrig committas (config.json har WiFi-lösenordet)
+esp32/config.json
+esp32/settings.json
+.webui_dev/
+backend/irrigation.db
+
+# Python
+__pycache__/
+*.pyc
+
+# OTA-temporärer
+*.tmp

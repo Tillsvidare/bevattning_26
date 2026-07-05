@@ -31,7 +31,7 @@ WATCHDOG_TIMEOUT_MS = 30000
 # Sensor-pollen grindar ventilstyrningen och WDT-övervakas därför också.
 HEARTBEAT_TIMEOUT_MS = {"mqtt": 15000, "scheduler": 15000, "sensor": 15000}
 
-print("Startar bevattningskontroller")
+print("Startar bevattningskontroller (OTA-test 2026-07-06)")
 
 # --- Konfiguration, schema och inställningar (flash) ---
 

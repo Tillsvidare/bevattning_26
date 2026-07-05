@@ -32,11 +32,19 @@ except ImportError:
 # Raw-adressen till esp32-katalogen på main-grenen.
 BASE_URL = ("https://raw.githubusercontent.com/"
             "Tillsvidare/bevattning_26/main/esp32/")
-MANIFEST_URL = BASE_URL + "manifest.json"
 
 WIFI_TIMEOUT_S = 30
 HTTP_TIMEOUT_S = 30
 CHUNK = 512
+
+# raw.githubusercontent.com CDN-cachear i ~5 min. En slumpad frågesträng
+# (ny per uppdateringskörning) gör cachenyckeln unik så enheten alltid får
+# färskt innehåll — GitHub ignorerar själva parametern.
+_nonce = binascii.hexlify(os.urandom(4)).decode()
+
+
+def _url(name):
+    return BASE_URL + name + "?ota=" + _nonce
 
 
 def _get(url):
@@ -94,7 +102,7 @@ def _mkdirs(path):
 
 def _download(name, want_sha):
     """Ladda ned en fil till <name>.tmp och verifiera hashen."""
-    r = _get(BASE_URL + name)
+    r = _get(_url(name))
     if r.status_code != 200:
         r.close()
         raise OSError("HTTP %d för %s" % (r.status_code, name))
@@ -118,8 +126,8 @@ def run():
     """Uppdatera från GitHub och starta om i normalläge. Återvänder aldrig
     vid framgång (machine.reset); kastar vid fel."""
     _connect_wifi()
-    print("ota: hämtar %s" % MANIFEST_URL)
-    r = _get(MANIFEST_URL)
+    print("ota: hämtar %s" % _url("manifest.json"))
+    r = _get(_url("manifest.json"))
     if r.status_code != 200:
         r.close()
         raise OSError("HTTP %d för manifestet" % r.status_code)

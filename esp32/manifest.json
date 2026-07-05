@@ -1,5 +1,5 @@
 {
- "version": "2026-07-06 00:40",
+ "version": "2026-07-06 00:43",
  "files": {
   "boot.py": "f3a098eb6a0a86431f7b975e57c68d7f483cf2d178deb43f68e17ed1091c7090",
   "clock.py": "7a0f336d18d35978ee2a7ae3458ab5bfaf88cd47fe3d2bdae2d45756aba0bd20",
@@ -10,7 +10,7 @@
   "main.py": "1c47763ac21ec6c84dbce438d688cd833fa421c6b4f00f3855a5d982a4044024",
   "mqtt_link.py": "bc576b25f188cad4d661ccd2d4bf3a4c9b5668177864b42a1c343e2a2368b14e",
   "net.py": "b34b7e641c16d78ecbc4ac00369927e9b3f2a8ab7081b53bf5124efd40b99873",
-  "ota_update.py": "8e15b87482caeae0dec03c6f4dbd4d96c2b4ab2caabd7b21d8885697e788b62b",
+  "ota_update.py": "b3edfb29b86bab589c74294653004a1d86158b6b32196a2751822b0e580b3f69",
   "scheduler.py": "d3c498fc383e2c0badc0bf73a963bf1d04b3b88f2ccbc7ce4e1e9745715db7f5",
   "storage.py": "f33facfba39c81ddc60c5ba619d04b7280b13a5f4d6ebe8998dcafacb8bc0d0d",
   "watersensor.py": "806c8855e57ab0bcf53aec7828525b64c28e8d401dc1497637f5a23b3c4f50a6",

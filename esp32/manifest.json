@@ -1,5 +1,5 @@
 {
- "version": "2026-07-06 00:43",
+ "version": "2026-07-07 11:47",
  "files": {
   "boot.py": "f3a098eb6a0a86431f7b975e57c68d7f483cf2d178deb43f68e17ed1091c7090",
   "clock.py": "7a0f336d18d35978ee2a7ae3458ab5bfaf88cd47fe3d2bdae2d45756aba0bd20",
@@ -7,15 +7,16 @@
   "lib/microdot.py": "5815bfec71d44f1ceee91d79c2ddd1b0cffb13409785166846c0a6f05d5ccb00",
   "lib/umqtt/robust.py": "2b034d4d5a6ec8d02104e51f051908de39bf7487b8aaa46390dedcc0087ac3d8",
   "lib/umqtt/simple.py": "5935cdd25d5c5c40baf4ece3e84abf3b9ead6a8dccf6deb2210bd6183e6d2a14",
-  "main.py": "1c47763ac21ec6c84dbce438d688cd833fa421c6b4f00f3855a5d982a4044024",
-  "mqtt_link.py": "bc576b25f188cad4d661ccd2d4bf3a4c9b5668177864b42a1c343e2a2368b14e",
-  "net.py": "b34b7e641c16d78ecbc4ac00369927e9b3f2a8ab7081b53bf5124efd40b99873",
+  "main.py": "e967d55a8d76e9f627380fa58cce774c169fae3f5d13b7438400d115cdb67845",
+  "mqtt_link.py": "e85e3e7b1e1fcdc21d93290e96cf1fa39a12819201f650cc463181f8d94aecb8",
+  "net.py": "1592b5a9fac963a249c8ce7c9ef3b5a8dcd9568d23d90279833448d533031b86",
   "ota_update.py": "b3edfb29b86bab589c74294653004a1d86158b6b32196a2751822b0e580b3f69",
+  "provision.py": "a28edb4bbd2cc27c50dae376e09b286fc75565bf4ca6627ac04b13576295ffd3",
   "scheduler.py": "d3c498fc383e2c0badc0bf73a963bf1d04b3b88f2ccbc7ce4e1e9745715db7f5",
-  "storage.py": "f33facfba39c81ddc60c5ba619d04b7280b13a5f4d6ebe8998dcafacb8bc0d0d",
+  "storage.py": "e4bd97af18e57ba9be12cf9186c20ec19766fd96098d825f251aa2b12b623973",
   "watersensor.py": "806c8855e57ab0bcf53aec7828525b64c28e8d401dc1497637f5a23b3c4f50a6",
-  "webui.py": "8c1521f60ecf5ac6146db39c1799d3cf5867fdbb8b42e6e4304b087ea1092911",
-  "wifi_setup.py": "5a1fc78b2881751b2e7f5107ae4ce56bd333311ddbbfe74aa705c23285805042",
+  "webui.py": "ef28b5eac781e75c30827ff79ba96b9280a067c18e3f81a9f7934f0bde339230",
+  "wifi_setup.py": "8e820944960429f7df5da19ed05d9a5e5eee75117e7de8d1ab9ce09c9305d56c",
   "wifi_update.py": "5082e1efcde2f8832b4690ea207e59c4ed837ad0e3a8c7842c80b7457004a182"
  }
 }

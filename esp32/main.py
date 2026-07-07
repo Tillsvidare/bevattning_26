@@ -21,6 +21,7 @@ import clock
 import hw
 import mqtt_link
 import net
+import provision
 import scheduler
 import storage
 import watersensor
@@ -115,6 +116,12 @@ async def main():
         heartbeats[name] = time.ticks_ms()
     asyncio.create_task(watchdog_task())
 
+    # Kopplingskod utan credentials: byt koden mot MQTT-uppgifter hos
+    # molnet (provision.py). Vid framgång sparas de i config.json och
+    # enheten startar om; tills dess kör allt annat vidare i lokal drift.
+    if config["claim_code"] and not config["mqtt_password"]:
+        asyncio.create_task(provision.provision_task(config))
+
     def get_irrigation():
         return settings["irrigation_enabled"]
 
@@ -146,6 +153,14 @@ async def main():
     def get_cloud():
         return {"enabled": mqtt.enabled, "connected": mqtt.connected}
 
+    def get_device():
+        """Moln-identitet + provisioneringsstatus för lokala webUI:t."""
+        return {
+            "device_id": config["device_id"],
+            "claiming": bool(config["claim_code"]),
+            "provision": provision.status,
+        }
+
     def set_cloud(enabled):
         """Toggle från webbgränssnittet: spara på flash + koppla upp/ner."""
         if enabled and not config["mqtt_host"]:
@@ -160,7 +175,7 @@ async def main():
     webui.init(get_schedule, apply_entries, mqtt.publish_schedule,
                get_cloud, set_cloud,
                get_irrigation, apply_irrigation, mqtt.publish_irrigation,
-               watersensor.is_wet)
+               watersensor.is_wet, get_device)
 
     asyncio.create_task(clock.sync_task())
     asyncio.create_task(mqtt.loop(make_heartbeat("mqtt")))

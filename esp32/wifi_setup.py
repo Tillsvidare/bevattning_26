@@ -49,10 +49,10 @@ footer { margin-top: 2em; color: #666; font-size: 0.85em; }
 </div>
 <label>WiFi-l&ouml;senord (tomt f&ouml;r &ouml;ppet n&auml;t)</label>
 <input name="password" type="password">
-<label>MQTT-broker (tomt = endast lokal drift, ingen molnsynk)</label>
-<input name="mqtt_host">
-<label>MQTT-port</label>
-<input name="mqtt_port" type="number" value="1883" min="1" max="65535">
+<label>Kopplingskod fr&aring;n molntj&auml;nsten
+(tomt = endast lokal drift)</label>
+<input name="claim_code" autocapitalize="characters" autocomplete="off"
+       placeholder="KOD-XXXXXX">
 <button>Spara och starta om</button>
 </form>
 <footer>Enheten startar om i normall&auml;ge n&auml;r inst&auml;llningarna
@@ -157,19 +157,13 @@ def _parse_config(fields):
     ssid = fields.get("ssid", "").strip()
     if not ssid:
         raise ValueError("SSID saknas")
-    # Tom broker är ok: endast lokal drift (molnsynk av, se main.py).
-    host = fields.get("mqtt_host", "").strip()
-    try:
-        port = int(fields.get("mqtt_port", "").strip() or "1883")
-    except ValueError:
-        raise ValueError("Ogiltig MQTT-port")
-    if not 1 <= port <= 65535:
-        raise ValueError("Ogiltig MQTT-port")
+    # Tom kod är ok: endast lokal drift. Med kod provisionerar main.py
+    # MQTT-uppgifterna från molnet efter första WiFi-anslutningen
+    # (provision.py); host/port/credentials skrivs då in i configen.
     return {
         "wifi_ssid": ssid,
         "wifi_password": fields.get("password", ""),
-        "mqtt_host": host,
-        "mqtt_port": port,
+        "claim_code": fields.get("claim_code", "").strip().upper(),
     }
 
 

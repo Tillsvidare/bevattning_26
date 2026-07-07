@@ -32,8 +32,10 @@ def _sync():
 def load_config():
     """Läs config.json. Utan den kan enheten inte göra något vettigt.
 
-    mqtt_host är valfri: tom/saknad betyder endast lokal drift — molnsynken
-    går då inte att slå på (se main.py).
+    Molnnycklarna är valfria — gamla configs förblir giltiga (lokal drift).
+    mqtt_host/credentials sätts normalt av provisioneringen (provision.py),
+    inte för hand. claim_code finns bara mellan portalen och en lyckad
+    provisionering. cloud_url är en dev-override av provision.DEFAULT_URL.
     """
     with open(CONFIG_FILE) as f:
         cfg = ujson.load(f)
@@ -42,7 +44,21 @@ def load_config():
             raise ValueError("config.json saknar '%s'" % key)
     cfg.setdefault("mqtt_host", "")
     cfg.setdefault("mqtt_port", 1883)
+    cfg.setdefault("device_id", "")
+    cfg.setdefault("mqtt_user", "")
+    cfg.setdefault("mqtt_password", "")
+    cfg.setdefault("mqtt_tls", False)
+    cfg.setdefault("claim_code", "")
+    cfg.setdefault("cloud_url", "")
     return cfg
+
+
+def save_config(cfg):
+    """Skriv config.json till flash (används av provisioneringen)."""
+    with open(CONFIG_FILE, "w") as f:
+        ujson.dump(cfg, f)
+    _sync()
+    print("storage: config.json sparad")
 
 
 def validate_entry(entry):

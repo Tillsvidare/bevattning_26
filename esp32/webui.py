@@ -14,11 +14,13 @@ _deps = {}
 
 
 def init(get_schedule, apply_entries, publish_schedule, get_cloud, set_cloud,
-         get_irrigation, set_irrigation, publish_irrigation, get_sensor):
+         get_irrigation, set_irrigation, publish_irrigation, get_sensor,
+         get_device=None):
     """apply_entries(vid, list) validerar+sparar; publish_schedule ekar /status;
     get_cloud() -> {"enabled","connected"}; set_cloud(bool) togglar molnsynk;
     get_irrigation() -> bool; set_irrigation(bool) sparar huvudbrytaren;
-    publish_irrigation() ekar den till molnet; get_sensor() -> bool (våt)."""
+    publish_irrigation() ekar den till molnet; get_sensor() -> bool (våt);
+    get_device() -> {"device_id","claiming","provision"} (moln-identitet)."""
     _deps["get_schedule"] = get_schedule
     _deps["apply_entries"] = apply_entries
     _deps["publish_schedule"] = publish_schedule
@@ -28,6 +30,7 @@ def init(get_schedule, apply_entries, publish_schedule, get_cloud, set_cloud,
     _deps["set_irrigation"] = set_irrigation
     _deps["publish_irrigation"] = publish_irrigation
     _deps["get_sensor"] = get_sensor
+    _deps["get_device"] = get_device or (lambda: {})
 
 
 _PAGE = b"""<!DOCTYPE html>
@@ -59,6 +62,7 @@ Vattensensor: <span id="sstat">...</span>
 <div class="cloud">
 <label><input type="checkbox" id="cloud"> Molnsynk (MQTT)</label>
 <span id="cstat"></span>
+<div id="dev" style="color:#666;font-size:.85em;margin-top:.3em"></div>
 </div>
 <form id="f">
 <fieldset><legend>Ventil 1</legend><div id="v1"></div>
@@ -98,6 +102,15 @@ toggle('irr','istat','/api/irrigation',function(box,stat,s){
 toggle('cloud','cstat','/api/cloud',function(box,stat,s){
  box.checked=s.enabled;
  stat.textContent=s.enabled?(s.connected?'ansluten':'ansluter...'):'lokal drift'});
+function pollDevice(){fetch('/api/device').then(function(r){return r.json()})
+ .then(function(d){var el=document.getElementById('dev'),t='';
+  if(d.device_id)t='Enhets-ID: '+d.device_id;
+  if(d.provision&&d.provision.state!=='idle')
+   t+=(t?' \\u2014 ':'')+d.provision.message;
+  el.textContent=t;
+  el.style.color=(d.provision&&d.provision.state==='invalid')?'#b00':'#666'})
+ .catch(function(){})}
+pollDevice();setInterval(pollDevice,10000);
 function pollSensor(){fetch('/api/sensor').then(function(r){return r.json()})
  .then(function(s){var el=document.getElementById('sstat');
   el.textContent=s.wet?'V\\u00c5T \\u2014 bevattning stoppad':'torr';
@@ -138,6 +151,11 @@ async def get_schedule(request):
 @app.get("/api/cloud")
 async def get_cloud(request):
     return _deps["get_cloud"]()
+
+
+@app.get("/api/device")
+async def get_device(request):
+    return _deps["get_device"]()
 
 
 @app.get("/api/irrigation")

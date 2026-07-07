@@ -30,7 +30,21 @@ def ip():
 
 async def _try_connect(ssid, password):
     _wlan.active(True)
-    _wlan.connect(ssid, password)
+    try:
+        # Avbryt ev. pågående internt anslutningsförsök — annars kastar
+        # IDF "Wifi Internal State Error" vid nästa connect() (kraschade
+        # tidigare hela main när nätet inte fanns vid uppstart).
+        _wlan.disconnect()
+    except OSError:
+        pass
+    try:
+        _wlan.connect(ssid, password)
+    except OSError as e:
+        print("net: connect vägrades (%s), släcker radion och försöker om" % e)
+        _wlan.active(False)
+        await asyncio.sleep(1)
+        _wlan.active(True)
+        return False
     for _ in range(CONNECT_TIMEOUT_S * 2):
         if _wlan.isconnected():
             print("net: ansluten, IP=%s" % ip())

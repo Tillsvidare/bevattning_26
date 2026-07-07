@@ -3,6 +3,9 @@ esp32/config.json
 esp32/settings.json
 .webui_dev/
 backend/irrigation.db
+backend/irrigation.db-shm
+backend/irrigation.db-wal
+.venv/
 
 # Python
 __pycache__/

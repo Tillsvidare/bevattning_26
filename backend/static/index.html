@@ -10,8 +10,18 @@
 <body>
 <main class="viz-root">
   <header>
-    <h1>Bevattning</h1>
-    <p id="mqtt-status" class="muted">Kontrollerar anslutning …</p>
+    <div class="topbar">
+      <div>
+        <h1>Bevattning</h1>
+        <p id="mqtt-status" class="muted">Kontrollerar anslutning …</p>
+      </div>
+      <div class="topbar-actions">
+        <select id="device-select" hidden aria-label="Välj enhet"></select>
+        <span id="device-name" class="muted"></span>
+        <button type="button" id="add-device-btn" class="ghost small">+ Lägg till enhet</button>
+        <button type="button" id="logout-btn" class="ghost small">Logga ut</button>
+      </div>
+    </div>
   </header>
 
   <section class="card master-card">
@@ -60,6 +70,21 @@
     <p id="table-empty" class="muted" hidden>Inga körningar de senaste 7 dagarna.</p>
   </section>
 </main>
+
+<dialog id="add-device-modal">
+  <h2>Lägg till enhet</h2>
+  <p>Din kopplingskod (gäller i 24 timmar):</p>
+  <p class="claim-code" id="claim-code">……</p>
+  <ol class="add-steps">
+    <li>Koppla in bevattningsenheten i ett eluttag.</li>
+    <li>Anslut mobilen till WiFi-nätet <strong>bevattning-setup</strong> som enheten skapar.</li>
+    <li>Fyll i ditt hemma-WiFi, dess lösenord och koden ovan i formuläret som öppnas.</li>
+    <li>Vänta — den här rutan säger till när enheten är ansluten.</li>
+  </ol>
+  <p id="claim-status" class="muted" role="status">Väntar på enheten …</p>
+  <button type="button" id="claim-close">Stäng</button>
+</dialog>
+
 <script src="app.js"></script>
 </body>
 </html>

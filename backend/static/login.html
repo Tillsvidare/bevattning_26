@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Logga in — Bevattning</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="viz-root auth-root">
+  <header>
+    <h1>Bevattning</h1>
+    <p class="muted">Logga in för att se och styra din bevattning.</p>
+  </header>
+
+  <section class="card auth-card">
+    <form id="login-form">
+      <h2>Logga in</h2>
+      <label>E-post
+        <input type="email" name="email" autocomplete="email" required>
+      </label>
+      <label>Lösenord
+        <input type="password" name="password" autocomplete="current-password" required>
+      </label>
+      <button type="submit">Logga in</button>
+      <p class="save-status muted" role="status"></p>
+      <p class="muted">Har du en inbjudningskod?
+        <a href="#" id="show-register">Skapa konto</a></p>
+    </form>
+
+    <form id="register-form" hidden>
+      <h2>Skapa konto</h2>
+      <label>E-post
+        <input type="email" name="email" autocomplete="email" required>
+      </label>
+      <label>Lösenord (minst 8 tecken)
+        <input type="password" name="password" autocomplete="new-password"
+               minlength="8" required>
+      </label>
+      <label>Inbjudningskod
+        <input type="text" name="invite_code" autocomplete="off" required
+               style="text-transform: uppercase">
+      </label>
+      <button type="submit">Skapa konto</button>
+      <p class="save-status muted" role="status"></p>
+      <p class="muted">Har du redan ett konto?
+        <a href="#" id="show-login">Logga in</a></p>
+    </form>
+  </section>
+</main>
+
+<script>
+"use strict";
+
+const loginForm = document.getElementById("login-form");
+const registerForm = document.getElementById("register-form");
+
+document.getElementById("show-register").addEventListener("click", (e) => {
+  e.preventDefault();
+  loginForm.hidden = true;
+  registerForm.hidden = false;
+});
+document.getElementById("show-login").addEventListener("click", (e) => {
+  e.preventDefault();
+  registerForm.hidden = true;
+  loginForm.hidden = false;
+});
+
+async function submit(form, url, body) {
+  const status = form.querySelector(".save-status");
+  const button = form.querySelector('button[type="submit"]');
+  button.disabled = true;
+  status.className = "save-status muted";
+  status.textContent = "Ett ögonblick …";
+  try {
+    const r = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (!r.ok) {
+      const detail = (await r.json().catch(() => ({}))).detail;
+      throw new Error(typeof detail === "string" ? detail : `Fel (HTTP ${r.status})`);
+    }
+    location.href = "/";
+    return;
+  } catch (e) {
+    status.className = "save-status err";
+    status.textContent = e.message;
+  }
+  button.disabled = false;
+}
+
+loginForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  submit(loginForm, "/api/auth/login", {
+    email: loginForm.email.value.trim(),
+    password: loginForm.password.value,
+  });
+});
+
+registerForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  submit(registerForm, "/api/auth/register", {
+    email: registerForm.email.value.trim(),
+    password: registerForm.password.value,
+    invite_code: registerForm.invite_code.value.trim().toUpperCase(),
+  });
+});
+</script>
+</body>
+</html>

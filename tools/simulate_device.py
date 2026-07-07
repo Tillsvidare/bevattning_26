@@ -1,26 +1,45 @@
 """Fejk-ESP32 för end-to-end-test av molndelen utan hårdvara.
 
-Gör tre saker:
-  1. Publicerar retained scheman till valve/{id}/schedule/status.
-  2. Publicerar 7 dagars påhittad ON/OFF-historik till valve/{id}/history.
-  3. Prenumererar på valve/{id}/schedule/set och ekar tillbaka till /status
-     efter 0.5 s — precis som riktiga enheten.
+Gör fyra saker:
+  1. Publicerar availability=online (retained, LWT=offline) för enheten.
+  2. Publicerar retained scheman till devices/{id}/valve/{n}/schedule/status.
+  3. Publicerar 7 dagars påhittad ON/OFF-historik till .../valve/{n}/history.
+  4. Prenumererar på .../schedule/set + .../irrigation/set och ekar tillbaka
+     till /status efter 0.5 s — precis som riktiga enheten.
 
 Körning:  pip install paho-mqtt && python tools/simulate_device.py [broker-host]
+Mot VPS:  python tools/simulate_device.py bevattning.tillsvidare.eu \
+              --port 8883 --tls --device-id bv-xxxxxxxx --user bv-xxxxxxxx --password ...
 """
 
+import argparse
 import json
 import random
-import sys
+import ssl
 import threading
 import time
 from datetime import datetime, timedelta, timezone
 
 import paho.mqtt.client as mqtt
 
-HOST = sys.argv[1] if len(sys.argv) > 1 else "localhost"
-PORT = 1883
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("host", nargs="?", default="localhost")
+parser.add_argument("--port", type=int, default=1883)
+parser.add_argument("--device-id", default="bv-dev001")
+parser.add_argument("--user", default=None, help="MQTT-username (default: anonym)")
+parser.add_argument("--password", default=None)
+parser.add_argument("--tls", action="store_true",
+                    help="TLS utan certvalidering (som enhetens MicroPython)")
+args = parser.parse_args()
+
+DEVICE_ID = args.device_id
 VALVES = (1, 2)
+
+
+def t(suffix: str) -> str:
+    """Namespaca ett topic under devices/{id}/."""
+    return f"devices/{DEVICE_ID}/{suffix}"
+
 
 # Lista av bevattningar per ventil (flera per dygn stöds, max 6)
 schedules = {
@@ -42,27 +61,19 @@ def iso(dt: datetime) -> str:
 
 
 def publish_status(client: mqtt.Client, valve_id: int) -> None:
-    client.publish(
-        f"valve/{valve_id}/schedule/status",
-        json.dumps(schedules[valve_id]),
-        qos=1,
-        retain=True,
-    )
-    print(f"-> valve/{valve_id}/schedule/status {schedules[valve_id]}")
+    topic = t(f"valve/{valve_id}/schedule/status")
+    client.publish(topic, json.dumps(schedules[valve_id]), qos=1, retain=True)
+    print(f"-> {topic} {schedules[valve_id]}")
 
 
 def publish_irrigation(client: mqtt.Client) -> None:
-    client.publish(
-        "bevattning/irrigation/status", json.dumps(irrigation), qos=1, retain=True
-    )
-    print(f"-> bevattning/irrigation/status {irrigation}")
+    client.publish(t("irrigation/status"), json.dumps(irrigation), qos=1, retain=True)
+    print(f"-> {t('irrigation/status')} {irrigation}")
 
 
 def publish_sensor(client: mqtt.Client) -> None:
-    client.publish(
-        "bevattning/sensor/status", json.dumps(sensor), qos=1, retain=True
-    )
-    print(f"-> bevattning/sensor/status {sensor}")
+    client.publish(t("sensor/status"), json.dumps(sensor), qos=1, retain=True)
+    print(f"-> {t('sensor/status')} {sensor}")
 
 
 def publish_history(client: mqtt.Client) -> None:
@@ -83,7 +94,7 @@ def publish_history(client: mqtt.Client) -> None:
             end = start + timedelta(minutes=minutes)
             for ts, state in ((start, "ON"), (end, "OFF")):
                 client.publish(
-                    f"valve/{valve_id}/history",
+                    t(f"valve/{valve_id}/history"),
                     json.dumps({"ts": iso(ts), "state": state}),
                     qos=1,
                 )
@@ -91,11 +102,12 @@ def publish_history(client: mqtt.Client) -> None:
 
 
 def on_message(client: mqtt.Client, userdata, msg) -> None:
-    parts = msg.topic.split("/")
+    # devices/{id}/... -> delarna efter prefixet
+    parts = msg.topic.split("/")[2:]
     # Eka bara riktiga /set-kommandon. amqtt-brokern (run_broker.py) har en
     # bugg där retained /status levereras till /set-prenumeranter — utan den
     # här kontrollen ekas gamla scheman tillbaka i en självförstärkande loop.
-    if msg.topic == "bevattning/irrigation/set":
+    if parts == ["irrigation", "set"]:
         payload = json.loads(msg.payload)
         print(f"<- {msg.topic} {payload}")
 
@@ -123,19 +135,29 @@ def on_message(client: mqtt.Client, userdata, msg) -> None:
 def main() -> None:
     # Unikt klient-id per körning: med ett återanvänt id kan brokern leverera
     # om gamla /set-meddelanden från förra sessionen, som då ekas till /status
-    # och skriver över de färska scheman som just publicerats.
-    client_id = f"simulate-device-{random.randint(0, 0xFFFFFF):06x}"
+    # och skriver över de färska scheman som just publicerats. (Riktiga
+    # enheten använder device_id som client-id; simulatorn startas om oftare.)
+    client_id = f"simulate-{DEVICE_ID}-{random.randint(0, 0xFFFFFF):06x}"
     client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=client_id)
+    if args.user:
+        client.username_pw_set(args.user, args.password)
+    if args.tls:
+        ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE  # som enhetens MicroPython
+        client.tls_set_context(ctx)
     client.on_message = on_message
-    client.connect(HOST, PORT)
+    client.will_set(t("availability"), "offline", qos=1, retain=True)
+    client.connect(args.host, args.port)
+    client.publish(t("availability"), "online", qos=1, retain=True)
     for valve_id in VALVES:
-        client.subscribe(f"valve/{valve_id}/schedule/set", qos=1)
+        client.subscribe(t(f"valve/{valve_id}/schedule/set"), qos=1)
         publish_status(client, valve_id)
-    client.subscribe("bevattning/irrigation/set", qos=1)
+    client.subscribe(t("irrigation/set"), qos=1)
     publish_irrigation(client)
     publish_sensor(client)
     publish_history(client)
-    print(f"Simulator igång mot {HOST}:{PORT} — Ctrl+C avslutar")
+    print(f"Simulator {DEVICE_ID} igång mot {args.host}:{args.port} — Ctrl+C avslutar")
     client.loop_forever()
 
 

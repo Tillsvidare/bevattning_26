@@ -1,4 +1,6 @@
-/* Molnfrontend: schemaformulär + 7-dagars tidslinje (Chart.js floating bars). */
+/* Molnfrontend: schemaformulär + 7-dagars tidslinje (Chart.js floating bars).
+   Multi-tenant: allt enhetsdata hämtas under /api/devices/{deviceId}/…;
+   401 skickar till inloggningen. */
 "use strict";
 
 const VALVES = [1, 2];
@@ -21,6 +23,126 @@ function fmtTime(d) {
 function fmtDate(d) {
   return d.toLocaleDateString("sv-SE", { weekday: "short", day: "numeric", month: "numeric" });
 }
+
+/* ---------- Enhetsval & API-hjälpare ---------- */
+
+let deviceId = null;
+let devices = [];
+
+/* fetch som skickar till inloggningen vid 401 (utgången session). */
+async function authFetch(url, opts) {
+  const r = await fetch(url, opts);
+  if (r.status === 401) {
+    location.href = "/login.html";
+    throw new Error("inte inloggad");
+  }
+  return r;
+}
+
+/* Alla enhets-endpoints bor under /api/devices/{id}/… */
+function api(path, opts) {
+  return authFetch(`/api/devices/${deviceId}${path}`, opts);
+}
+
+const deviceSelect = document.getElementById("device-select");
+const deviceName = document.getElementById("device-name");
+
+function renderDeviceBar() {
+  deviceSelect.innerHTML = "";
+  for (const d of devices) {
+    const opt = document.createElement("option");
+    opt.value = d.id;
+    opt.textContent = d.name + (d.online ? "" : " (offline)");
+    opt.selected = d.id === deviceId;
+    deviceSelect.appendChild(opt);
+  }
+  deviceSelect.hidden = devices.length < 2;
+  const current = devices.find((d) => d.id === deviceId);
+  deviceName.textContent = devices.length === 1 && current ? current.name : "";
+}
+
+async function refreshDevices() {
+  const r = await authFetch("/api/devices");
+  devices = await r.json();
+  const stored = localStorage.getItem("deviceId");
+  if (!devices.some((d) => d.id === deviceId)) {
+    deviceId = devices.some((d) => d.id === stored) ? stored : (devices[0]?.id ?? null);
+  }
+  if (deviceId) localStorage.setItem("deviceId", deviceId);
+  renderDeviceBar();
+}
+
+function loadAllForDevice() {
+  document.querySelectorAll("form[data-valve]").forEach((form) => loadSchedule(form));
+  loadHistory();
+  loadIrrigation();
+  loadSensor();
+}
+
+deviceSelect.addEventListener("change", () => {
+  deviceId = deviceSelect.value;
+  localStorage.setItem("deviceId", deviceId);
+  renderDeviceBar();
+  loadAllForDevice();
+});
+
+document.getElementById("logout-btn").addEventListener("click", async () => {
+  await fetch("/api/auth/logout", { method: "POST" });
+  location.href = "/login.html";
+});
+
+/* ---------- "Lägg till enhet"-modal ---------- */
+
+const addModal = document.getElementById("add-device-modal");
+const claimCodeEl = document.getElementById("claim-code");
+const claimStatus = document.getElementById("claim-status");
+let claimPoll = null;
+
+async function openAddDevice() {
+  claimCodeEl.textContent = "……";
+  claimStatus.className = "muted";
+  claimStatus.textContent = "Hämtar kod …";
+  addModal.showModal();
+  try {
+    const r = await authFetch("/api/claim-codes", { method: "POST" });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const claim = await r.json();
+    claimCodeEl.textContent = claim.code;
+    claimStatus.textContent = "Väntar på enheten …";
+  } catch (e) {
+    claimStatus.className = "save-status err";
+    claimStatus.textContent = `Kunde inte hämta kod: ${e.message}`;
+    return;
+  }
+  const known = new Set(devices.map((d) => d.id));
+  claimPoll = setInterval(async () => {
+    try {
+      const r = await authFetch("/api/devices");
+      const list = await r.json();
+      const fresh = list.find((d) => !known.has(d.id));
+      if (fresh) {
+        clearInterval(claimPoll);
+        claimPoll = null;
+        devices = list;
+        deviceId = fresh.id;
+        localStorage.setItem("deviceId", deviceId);
+        renderDeviceBar();
+        loadAllForDevice();
+        claimStatus.className = "save-status ok";
+        claimStatus.textContent = "Enheten är ansluten ✓";
+      }
+    } catch {
+      /* nätverksglapp — försök igen nästa varv */
+    }
+  }, 3000);
+}
+
+document.getElementById("add-device-btn").addEventListener("click", openAddDevice);
+document.getElementById("claim-close").addEventListener("click", () => {
+  if (claimPoll) clearInterval(claimPoll);
+  claimPoll = null;
+  addModal.close();
+});
 
 /* ---------- Schema (lista av bevattningar per ventil, max 6) ---------- */
 
@@ -48,9 +170,10 @@ function renderEntries(form, entries) {
 }
 
 async function loadSchedule(form) {
+  if (!deviceId) return null;
   const id = form.dataset.valve;
   try {
-    const r = await fetch(`/api/valves/${id}/schedule`);
+    const r = await api(`/valves/${id}/schedule`);
     if (!r.ok) return null;
     const s = await r.json();
     renderEntries(form, s);
@@ -63,7 +186,7 @@ async function loadSchedule(form) {
 /* Som loadSchedule men rör inte formuläret (används vid eko-pollning). */
 async function fetchSchedule(id) {
   try {
-    const r = await fetch(`/api/valves/${id}/schedule`);
+    const r = await api(`/valves/${id}/schedule`);
     return r.ok ? await r.json() : null;
   } catch {
     return null;
@@ -92,7 +215,7 @@ async function saveSchedule(form) {
   status.className = "save-status muted";
   status.textContent = "Skickar …";
   try {
-    const r = await fetch(`/api/valves/${id}/schedule`, {
+    const r = await api(`/valves/${id}/schedule`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(wanted),
@@ -286,8 +409,9 @@ function showIrrigation(enabled) {
 }
 
 async function loadIrrigation() {
+  if (!deviceId) return null;
   try {
-    const r = await fetch("/api/irrigation");
+    const r = await api("/irrigation");
     if (!r.ok) {
       irrStatus.textContent = "enheten har inte rapporterat ännu";
       return null;
@@ -306,7 +430,7 @@ irrToggle.addEventListener("change", async () => {
   irrStatus.className = "muted";
   irrStatus.textContent = "skickar …";
   try {
-    const r = await fetch("/api/irrigation", {
+    const r = await api("/irrigation", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ enabled: wanted }),
@@ -334,8 +458,9 @@ irrToggle.addEventListener("change", async () => {
 const sensorStatus = document.getElementById("sensor-status");
 
 async function loadSensor() {
+  if (!deviceId) return;
   try {
-    const r = await fetch("/api/sensor");
+    const r = await api("/sensor");
     if (!r.ok) {
       sensorStatus.className = "muted sensor";
       sensorStatus.textContent = "";
@@ -354,6 +479,7 @@ async function loadSensor() {
 let lastData = null;
 
 async function loadHistory() {
+  if (!deviceId) return;
   const now = new Date();
   const dayStarts = lastDays(DAYS);
   const intervalsByValve = {};
@@ -361,7 +487,7 @@ async function loadHistory() {
   for (const id of VALVES) {
     let events = [];
     try {
-      const r = await fetch(`/api/valves/${id}/history?days=${DAYS}`);
+      const r = await api(`/valves/${id}/history?days=${DAYS}`);
       if (r.ok) events = await r.json();
     } catch {
       /* backend nere — visa tomt */
@@ -386,7 +512,6 @@ async function updateHealth() {
 }
 
 document.querySelectorAll("form[data-valve]").forEach((form) => {
-  loadSchedule(form);
   form.addEventListener("submit", (e) => {
     e.preventDefault();
     saveSchedule(form);
@@ -408,17 +533,29 @@ window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () 
   if (lastData) renderChart(lastData.segmentsByValve, lastData.dayStarts);
 });
 
-updateHealth();
-loadHistory();
-loadIrrigation();
-loadSensor();
-setInterval(loadSensor, 10 * 1000);
-setInterval(loadHistory, 60 * 1000);
-setInterval(updateHealth, 30 * 1000);
-setInterval(() => {
-  /* Uppdatera inte mitt i en pågående eko-pollning (toggeln är då disabled
-     med "skickar/väntar"-status som inte får skrivas över). */
-  if (!irrToggle.disabled || irrStatus.textContent.includes("rapporterat")) {
-    loadIrrigation();
+/* ---------- Start: kräver inloggning + minst en enhet ---------- */
+
+(async () => {
+  try {
+    await refreshDevices(); // 401 → redirect till login.html
+  } catch {
+    return;
   }
-}, 30 * 1000);
+  updateHealth();
+  if (deviceId) {
+    loadAllForDevice();
+  } else {
+    openAddDevice(); // nytt konto utan enheter — visa kopplingsflödet direkt
+  }
+
+  setInterval(loadSensor, 10 * 1000);
+  setInterval(loadHistory, 60 * 1000);
+  setInterval(updateHealth, 30 * 1000);
+  setInterval(() => {
+    /* Uppdatera inte mitt i en pågående eko-pollning (toggeln är då disabled
+       med "skickar/väntar"-status som inte får skrivas över). */
+    if (!irrToggle.disabled || irrStatus.textContent.includes("rapporterat")) {
+      loadIrrigation();
+    }
+  }, 30 * 1000);
+})();

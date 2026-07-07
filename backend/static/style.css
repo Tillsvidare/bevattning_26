@@ -111,6 +111,47 @@ button:disabled { opacity: 0.5; cursor: default; }
 .chart-wrap { position: relative; height: 320px; }
 
 .table-wrap { overflow-x: auto; }
+
+/* ---------- Topbar (enhetsväljare, logga ut) ---------- */
+
+.topbar { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.topbar-actions { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.6rem; }
+.topbar-actions select {
+  padding: 0.4rem;
+  border: 1px solid var(--baseline); border-radius: 6px;
+  background: var(--surface-1); color: var(--text-primary); font: inherit;
+}
+button.small { padding: 0.35rem 0.75rem; font-size: 0.85rem; }
+.topbar-actions .ghost { display: inline-block; width: auto; margin: 0; }
+
+/* ---------- Inloggning ---------- */
+
+.auth-root { max-width: 26rem; }
+.auth-card label { display: block; margin: 0.75rem 0; font-size: 0.9rem; }
+.auth-card input {
+  display: block; width: 100%; margin-top: 0.25rem; padding: 0.5rem;
+  border: 1px solid var(--baseline); border-radius: 6px;
+  background: var(--page); color: var(--text-primary); font: inherit;
+}
+.auth-card button[type="submit"] { width: 100%; margin-top: 0.5rem; }
+.auth-card a { color: var(--accent); }
+
+/* ---------- "Lägg till enhet"-modal ---------- */
+
+dialog {
+  background: var(--surface-1); color: var(--text-primary);
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 1.25rem; max-width: 24rem;
+}
+dialog::backdrop { background: rgba(0, 0, 0, 0.45); }
+.claim-code {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 1.5rem; font-weight: 700; letter-spacing: 0.08em;
+  text-align: center; margin: 0.5rem 0;
+  padding: 0.5rem; border: 1px dashed var(--baseline); border-radius: 8px;
+}
+.add-steps { padding-left: 1.25rem; font-size: 0.9rem; color: var(--text-secondary); }
+.add-steps li { margin: 0.4rem 0; }
 table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
 th { text-align: left; color: var(--text-muted); font-weight: 600; }
 th, td { padding: 0.4rem 0.75rem 0.4rem 0; border-bottom: 1px solid var(--gridline); }

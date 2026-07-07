@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Manual — Bevattning</title>
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="/icon-192.png" type="image/png">
+<meta name="theme-color" content="#f9f9f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0d0d0d" media="(prefers-color-scheme: dark)">
+<style>
+.manual h2 { margin-top: 1.5rem; }
+.manual p, .manual li { line-height: 1.55; }
+.tip {
+  border-left: 3px solid var(--accent);
+  padding: 0.4rem 0.9rem; margin: 0.8rem 0;
+  background: var(--page); border-radius: 0 6px 6px 0;
+  font-size: 0.9rem; color: var(--text-secondary);
+}
+.dot { font-weight: 700; }
+.dot.g { color: #1baf7a; } .dot.r { color: #d03b3b; }
+@media print {
+  body { background: #fff; color: #000; }
+  .card { border: none; padding: 0; }
+  .no-print { display: none; }
+}
+</style>
+</head>
+<body>
+<main class="viz-root auth-root manual">
+  <header>
+    <h1>Så använder du bevattningen</h1>
+    <p class="muted">Allt du behöver veta för vardagen. Att koppla in en ny
+      enhet beskrivs i <a href="/onboarding.html">kom igång-guiden</a>.</p>
+  </header>
+
+  <section class="card">
+    <h2>Appen i mobilen</h2>
+    <p>Gå till <strong>bevattning.tillsvidare.eu</strong> och logga in.
+      Vill du ha den som en riktig app med egen ikon:</p>
+    <ul>
+      <li><strong>iPhone:</strong> öppna sidan i Safari → dela-knappen →
+        <em>Lägg till på hemskärmen</em>.</li>
+      <li><strong>Android:</strong> öppna sidan i Chrome → menyn (⋮) →
+        <em>Lägg till på startskärmen</em>.</li>
+    </ul>
+    <p>Du behöver bara logga in ungefär en gång i månaden.</p>
+  </section>
+
+  <section class="card">
+    <h2>Förstasidan</h2>
+    <ul>
+      <li><span class="dot g">● online</span> uppe till höger betyder att
+        enheten har kontakt. <span class="dot r">● offline</span> med en
+        tid visar när den senast hördes av — se felsökningen nedan.</li>
+      <li><strong>Bevattning</strong>-knappen är huvudbrytaren: av stänger
+        all bevattning direkt (även en pågående), på låter schemat styra.</li>
+      <li><strong>Sensor: torr/VÅT</strong> — regnsensorn. Är det blött
+        pausar bevattningen av sig själv och fortsätter enligt schemat när
+        det torkat. Du behöver inte göra något.</li>
+      <li>Pennan <strong>✎</strong> byter namn på enheten
+        (t.ex. "Växthuset").</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>Ställa in bevattningen</h2>
+    <p>Varje ventil (slang) har sin egen lista. En rad = en bevattning:
+      <em>starttid</em>, <em>antal minuter</em> och en bock för på/av.</p>
+    <ol>
+      <li>Ändra tiderna eller tryck <em>+ Lägg till bevattning</em>
+        (max 6 per dygn och ventil).</li>
+      <li>Tryck <strong>Spara</strong>.</li>
+      <li>Vänta på <em>"Sparat på enheten ✓"</em> — då har enheten själv
+        bekräftat att den tagit emot schemat.</li>
+    </ol>
+    <div class="tip">Bocka ur en rad istället för att ta bort den om du
+      bara vill pausa den ett tag — tiderna finns kvar.</div>
+  </section>
+
+  <section class="card">
+    <h2>Historiken</h2>
+    <p>Diagrammet visar de senaste 7 dagarna: när och hur länge varje
+      ventil faktiskt vattnat (lokal tid). Tabellen under visar samma sak
+      som lista. Kort körning som knappt syns i diagrammet? Håll
+      fingret/muspekaren på stapeln så visas exakta tider.</p>
+  </section>
+
+  <section class="card">
+    <h2>Om något krånglar</h2>
+    <ul>
+      <li><strong>Appen visar <span class="dot r">● offline</span>:</strong>
+        enheten har tappat kontakten med internet — men den <em>fortsätter
+        vattna enligt schemat ändå</em>, helt på egen hand. Kolla att
+        routern är igång. Enheten återansluter alltid själv.</li>
+      <li><strong>Nytt WiFi eller ny router hemma?</strong> Dra ur enhetens
+        strömkontakt och sätt i den igen. Efter 3–4 minuter skapar den
+        WiFi-nätet <strong>bevattning</strong> — anslut mobilen till det
+        och fyll i ditt nya WiFi-namn och lösenord. Lämna kodrutan tom.
+        Klart!</li>
+      <li><strong>Ändringar sparas inte?</strong> "Skickat, men enheten
+        har inte bekräftat ännu" betyder att enheten är offline just nu —
+        prova igen när den är <span class="dot g">● online</span>.</li>
+      <li><strong>Glömt lösenordet?</strong> Hör av dig till Robert så får
+        du ett nytt — det finns ingen "glömt lösenord"-knapp.</li>
+      <li><strong>Inget hjälper?</strong> Dra ur strömmen till enheten,
+        vänta tio sekunder, sätt i den igen. Den startar alltid säkert:
+        ventilerna stängs först och schemat finns kvar.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>Bra att veta</h2>
+    <ul>
+      <li>Enheten sköter sig själv — den behöver inte appen för att vattna.
+        Appen är fjärrkontrollen och facit.</li>
+      <li>Tiderna går alltid i svensk lokal tid, även efter strömavbrott
+        och vid sommartidsbyte.</li>
+      <li>Strömavbrott är ofarliga: allt är sparat i enheten och
+        bevattningen fortsätter själv när strömmen kommer tillbaka.</li>
+    </ul>
+  </section>
+
+  <p class="muted no-print">Sidan är utskriftsvänlig — skriv gärna ut den
+    tillsammans med <a href="/onboarding.html">kom igång-guiden</a>.</p>
+</main>
+</body>
+</html>

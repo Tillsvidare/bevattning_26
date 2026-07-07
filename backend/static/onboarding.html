@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kom igång — Bevattning</title>
+<link rel="stylesheet" href="style.css">
+<style>
+/* Utskriftsvänlig: lappen ska funka på papper hos en icke-teknisk vän. */
+.steps { counter-reset: steg; padding: 0; margin: 0; list-style: none; }
+.steps li {
+  counter-increment: steg;
+  position: relative; padding: 0 0 1.1rem 3rem; margin: 0;
+}
+.steps li::before {
+  content: counter(steg);
+  position: absolute; left: 0; top: -0.15rem;
+  width: 2rem; height: 2rem; border-radius: 50%;
+  background: var(--accent); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700;
+}
+.steps strong { display: block; margin-bottom: 0.15rem; }
+kbd {
+  font-family: ui-monospace, Consolas, monospace;
+  background: var(--page); border: 1px solid var(--baseline);
+  border-radius: 4px; padding: 0.05rem 0.4rem;
+}
+@media print {
+  body { background: #fff; color: #000; }
+  .card { border: none; padding: 0; }
+  .no-print { display: none; }
+}
+</style>
+</head>
+<body>
+<main class="viz-root auth-root">
+  <header>
+    <h1>Kom igång med bevattningen</h1>
+    <p class="muted">Tar ungefär fem minuter. Du behöver din mobil,
+      ditt WiFi-lösenord och de två koderna du fått.</p>
+  </header>
+
+  <section class="card">
+    <ol class="steps">
+      <li><strong>Skapa ditt konto</strong>
+        Öppna <kbd>bevattning.tillsvidare.eu</kbd> i mobilen, välj
+        <em>Skapa konto</em> och fyll i din e-post, ett lösenord och
+        <em>inbjudningskoden</em> du fått.</li>
+      <li><strong>Hämta en kopplingskod</strong>
+        Tryck på <em>+ Lägg till enhet</em>. Du får en kod som ser ut som
+        <kbd>KOD-XXXXXX</kbd> — låt rutan vara öppen, den säger till när
+        allt är klart.</li>
+      <li><strong>Koppla in bevattningsenheten</strong>
+        Sätt den i ett eluttag nära din router. Vänta en halv minut.</li>
+      <li><strong>Anslut mobilen till enhetens WiFi</strong>
+        Gå till WiFi-inställningarna i mobilen och välj nätet
+        <kbd>bevattning</kbd>. Ett formulär öppnas av sig självt
+        (om inte: surfa till <kbd>192.168.4.1</kbd>).</li>
+      <li><strong>Fyll i formuläret</strong>
+        Välj ditt hemma-WiFi i listan, skriv WiFi-lösenordet och
+        kopplingskoden från steg 2. Tryck <em>Spara och starta om</em>.</li>
+      <li><strong>Klart!</strong>
+        Gå tillbaka till <kbd>bevattning.tillsvidare.eu</kbd> — inom en
+        minut står det <em>Enheten är ansluten ✓</em>. Nu kan du se och
+        ändra bevattningen varifrån som helst.</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2>Om det krånglar</h2>
+    <ul class="muted" style="padding-left: 1.2rem; margin: 0;">
+      <li>Enheten klarar bara <strong>2,4 GHz-WiFi</strong>. Har din router
+        separata nät (t.ex. "hemma" och "hemma-5G"): välj det utan 5G.</li>
+      <li>Syns inte nätet <kbd>bevattning</kbd>? Dra ur strömmen,
+        vänta tio sekunder och sätt i den igen.</li>
+      <li>Kopplingskoden gäller i 24 timmar. Har den gått ut: tryck
+        <em>+ Lägg till enhet</em> igen för en ny.</li>
+      <li>Fel WiFi-lösenord? Enheten öppnar nätet <kbd>bevattning</kbd>
+        igen efter en stund — gör om steg 4 och 5.</li>
+      <li>Kör det ändå fast? Hör av dig till Robert.</li>
+    </ul>
+  </section>
+
+  <p class="muted no-print">Tips: den här sidan är utskriftsvänlig —
+    skriv ut och lägg i kartongen med enheten.</p>
+</main>
+</body>
+</html>

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin — Bevattning</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="viz-root">
+  <header>
+    <div class="topbar">
+      <div>
+        <h1>Admin</h1>
+        <p class="muted">Inbjudningar, användare och enheter.</p>
+      </div>
+      <div class="topbar-actions">
+        <a href="/" class="muted">← Till appen</a>
+      </div>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2>Inbjudningskoder</h2>
+    <p class="muted">En kod = ett konto. Skapa en kod per vän och skicka den
+      tillsammans med <a href="/onboarding.html">instruktionsbladet</a>.</p>
+    <button type="button" id="new-invite">Skapa ny kod</button>
+    <p id="invite-status" class="save-status muted" role="status"></p>
+    <div class="table-wrap">
+      <table id="invites">
+        <thead><tr><th>Kod</th><th>Status</th><th>Skapad</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Användare</h2>
+    <div class="table-wrap">
+      <table id="users">
+        <thead><tr><th>E-post</th><th>Roll</th><th>Enheter</th><th>Skapad</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <p class="muted">Glömt lösenord? Sätt ett nytt här och meddela användaren —
+      ingen e-post skickas.</p>
+  </section>
+
+  <section class="card">
+    <h2>Enheter</h2>
+    <div class="table-wrap">
+      <table id="devices">
+        <thead><tr><th>Id</th><th>Namn</th><th>Ägare</th><th>Status</th><th>Senast sedd</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<script>
+"use strict";
+
+async function api(url, opts) {
+  const r = await fetch(url, opts);
+  if (r.status === 401) { location.href = "/login.html"; throw new Error("401"); }
+  if (r.status === 404 && url.startsWith("/api/admin")) {
+    location.href = "/";  /* inte admin */
+    throw new Error("404");
+  }
+  return r;
+}
+
+function fmtDate(ts) {
+  return ts ? new Date(/Z|[+-]\d{2}:\d{2}$/.test(ts) ? ts : ts + "Z")
+      .toLocaleString("sv-SE", { dateStyle: "short", timeStyle: "short" }) : "–";
+}
+
+let usersById = {};
+
+async function loadUsers() {
+  const users = await (await api("/api/admin/users")).json();
+  usersById = {};
+  const tbody = document.querySelector("#users tbody");
+  tbody.innerHTML = "";
+  for (const u of users) {
+    usersById[u.id] = u;
+    const tr = document.createElement("tr");
+    tr.innerHTML =
+      `<td>${u.email}</td><td>${u.is_admin ? "admin" : ""}</td>` +
+      `<td class="num">${u.device_count}</td><td>${fmtDate(u.created_at)}</td>` +
+      `<td><button type="button" class="ghost small">Nytt lösenord</button></td>`;
+    tr.querySelector("button").addEventListener("click", async () => {
+      const pw = prompt(`Nytt lösenord för ${u.email} (minst 8 tecken):`);
+      if (!pw) return;
+      const r = await api(`/api/admin/users/${u.id}/password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: pw }),
+      });
+      alert(r.ok ? `Lösenordet bytt för ${u.email}.`
+                 : "Misslyckades — minst 8 tecken krävs.");
+    });
+    tbody.appendChild(tr);
+  }
+}
+
+async function loadInvites() {
+  const invites = await (await api("/api/admin/invites")).json();
+  const tbody = document.querySelector("#invites tbody");
+  tbody.innerHTML = "";
+  for (const inv of invites) {
+    const used = inv.used_by !== null;
+    const who = used ? (usersById[inv.used_by]?.email ?? `användare ${inv.used_by}`) : "";
+    const tr = document.createElement("tr");
+    tr.innerHTML =
+      `<td class="num" style="font-family:ui-monospace,Consolas,monospace">${inv.code}</td>` +
+      `<td>${used ? "använd av " + who : "<strong>ledig</strong>"}</td>` +
+      `<td>${fmtDate(inv.created_at)}</td>`;
+    tbody.appendChild(tr);
+  }
+}
+
+async function loadDevices() {
+  const devices = await (await api("/api/admin/devices")).json();
+  const tbody = document.querySelector("#devices tbody");
+  tbody.innerHTML = "";
+  for (const d of devices) {
+    const tr = document.createElement("tr");
+    tr.innerHTML =
+      `<td style="font-family:ui-monospace,Consolas,monospace">${d.id}</td>` +
+      `<td>${d.name}</td><td>${d.owner}</td>` +
+      `<td>${d.online ? "online" : "offline"}</td><td>${fmtDate(d.last_seen)}</td>`;
+    tbody.appendChild(tr);
+  }
+}
+
+document.getElementById("new-invite").addEventListener("click", async () => {
+  const status = document.getElementById("invite-status");
+  const r = await api("/api/admin/invites", { method: "POST" });
+  if (r.ok) {
+    const inv = await r.json();
+    status.className = "save-status ok";
+    status.textContent = `Ny kod: ${inv.code}`;
+    loadInvites();
+  } else {
+    status.className = "save-status err";
+    status.textContent = "Kunde inte skapa kod.";
+  }
+});
+
+(async () => {
+  await loadUsers();   /* fyller usersById före invite-listan */
+  await Promise.all([loadInvites(), loadDevices()]);
+  setInterval(loadDevices, 30 * 1000);
+})();
+</script>
+</body>
+</html>

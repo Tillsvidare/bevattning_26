@@ -537,9 +537,11 @@ window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () 
 
 (async () => {
   try {
-    await refreshDevices(); // 401 → redirect till login.html
+    const me = await (await authFetch("/api/auth/me")).json();
+    document.getElementById("admin-link").hidden = !me.is_admin;
+    await refreshDevices();
   } catch {
-    return;
+    return; // 401 → redirect till login.html är redan gjord
   }
   updateHealth();
   if (deviceId) {

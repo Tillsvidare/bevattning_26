@@ -68,6 +68,7 @@ function renderDeviceBar() {
   deviceSelect.hidden = devices.length < 2;
   const current = devices.find((d) => d.id === deviceId);
   deviceName.textContent = devices.length === 1 && current ? current.name : "";
+  document.getElementById("rename-btn").hidden = !current;
   if (current) {
     deviceStatus.className = "dev-status " + (current.online ? "online" : "offline");
     deviceStatus.textContent = current.online
@@ -101,6 +102,24 @@ deviceSelect.addEventListener("change", () => {
   localStorage.setItem("deviceId", deviceId);
   renderDeviceBar();
   loadAllForDevice();
+});
+
+document.getElementById("rename-btn").addEventListener("click", async () => {
+  const current = devices.find((d) => d.id === deviceId);
+  if (!current) return;
+  const name = prompt("Nytt namn på enheten:", current.name);
+  if (!name || !name.trim() || name.trim() === current.name) return;
+  try {
+    const r = await api("", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: name.trim() }),
+    });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    await refreshDevices();
+  } catch (e) {
+    alert(`Kunde inte byta namn: ${e.message}`);
+  }
 });
 
 document.getElementById("logout-btn").addEventListener("click", async () => {

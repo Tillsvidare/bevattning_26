@@ -19,6 +19,12 @@
 }
 .dot { font-weight: 700; }
 .dot.g { color: #1baf7a; } .dot.r { color: #d03b3b; }
+.shot {
+  display: block; max-width: 17rem; width: 100%;
+  margin: 1rem auto; border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.shot.wide { max-width: 100%; border-radius: 8px; }
 @media print {
   body { background: #fff; color: #000; }
   .card { border: none; padding: 0; }
@@ -49,6 +55,9 @@
 
   <section class="card">
     <h2>Förstasidan</h2>
+    <img class="shot" src="/skarmdump-app.png"
+         alt="Skärmdump av appen: enhetens namn överst, grön online-punkt,
+              huvudbrytaren Bevattning, sensorstatus och schemat för två ventiler">
     <ul>
       <li><span class="dot g">● online</span> uppe till höger betyder att
         enheten har kontakt. <span class="dot r">● offline</span> med en
@@ -80,6 +89,9 @@
 
   <section class="card">
     <h2>Historiken</h2>
+    <img class="shot wide" src="/skarmdump-historik.png"
+         alt="Skärmdump av historikdiagrammet: en rad per dag, staplar där
+              blått är ventil 1 och grönt ventil 2">
     <p>Diagrammet visar de senaste 7 dagarna: när och hur länge varje
       ventil faktiskt vattnat (lokal tid). Tabellen under visar samma sak
       som lista. Kort körning som knappt syns i diagrammet? Håll

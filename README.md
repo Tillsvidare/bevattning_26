@@ -57,6 +57,11 @@ inbjudningskoden `DEVKOD01`).
 Uppdateringar därefter via OTA: håll knappen vid strömpåslag, enheten
 hämtar från GitHub (publicera med `python tools/make_manifest.py` + push).
 
+**Knappen i drift:** kort tryck togglar huvudbrytaren (orange LED =
+avstängd), långt tryck (≥3 s, pip vid tröskeln) startar/stoppar 10 min
+manuell bevattning på båda ventilerna — kräver huvudbrytare på och torr
+sensor.
+
 ## Kataloger
 
 - `backend/` — FastAPI-app + statisk frontend/PWA (`static/`)

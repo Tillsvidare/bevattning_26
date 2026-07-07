@@ -67,7 +67,12 @@ function renderDeviceBar() {
   }
   deviceSelect.hidden = devices.length < 2;
   const current = devices.find((d) => d.id === deviceId);
-  deviceName.textContent = devices.length === 1 && current ? current.name : "";
+  /* En enda enhet: enhetens namn ÄR rubriken (och fliktiteln) — det är
+     där man tittar efter namnbytet. Flera enheter: appnamn + väljare. */
+  const single = devices.length === 1 && current;
+  document.querySelector("header h1").textContent = single ? current.name : "Bevattning";
+  document.title = single ? current.name + " — Bevattning" : "Bevattning";
+  deviceName.textContent = "";
   document.getElementById("rename-btn").hidden = !current;
   if (current) {
     deviceStatus.className = "dev-status " + (current.online ? "online" : "offline");

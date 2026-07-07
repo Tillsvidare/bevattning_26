@@ -8,9 +8,10 @@
 import asyncio
 import time
 
-from machine import ADC, Pin
+from machine import ADC, PWM, Pin
 
 VALVE_PULSE_S = 6
+BUZZER_FREQ = 2500  # hörbart larmområde enligt hardware.md (2-4 kHz)
 
 # Vattensensor (GPIO 1): analog, våt < 50 % av mätområdet (hardware.md).
 WATER_THRESHOLD = 32768  # 50 % av read_u16-området 0-65535
@@ -24,6 +25,12 @@ m2_close = Pin(41, Pin.OUT, value=0)
 red_led = Pin(7, Pin.OUT, value=0)
 green_led = Pin(6, Pin.OUT, value=0)
 
+# Knapp (GPIO 5): aktiv låg, extern pull-up — ingen intern pull.
+button = Pin(5, Pin.IN)
+
+# Summer (GPIO 39): PWM, startas avstängd så pinnen aldrig ligger och låter.
+_buzzer = PWM(Pin(39), freq=BUZZER_FREQ, duty_u16=0)
+
 water_adc = ADC(Pin(1), atten=ADC.ATTN_11DB)
 
 
@@ -34,6 +41,15 @@ def read_water():
 
 # valve_id -> (öppna-pinne, stäng-pinne)
 MOTORS = {1: (m1_open, m1_close), 2: (m2_open, m2_close)}
+
+
+async def beep(ms=100):
+    """Kort pip (50 % duty) med garanterat avstängd summer efteråt."""
+    _buzzer.duty_u16(32768)
+    try:
+        await asyncio.sleep_ms(ms)
+    finally:
+        _buzzer.duty_u16(0)
 
 
 async def pulse(pin, heartbeat=None):

@@ -5,7 +5,7 @@
 #   2. Pulsa båda ventilerna STÄNGDA (känt läge) FÖRE WDT-init —
 #      6 s-pulsen skulle annars äta upp watchdog-marginalen.
 #   3. WiFi -> starta tasks: klocksynk, MQTT, schemaläggare, webbserver,
-#      LED-status, watchdog.
+#      LED-status, knapp, watchdog.
 #
 # WiFi-uppdateringsläge (knappen hålls vid uppstart) hanteras i boot.py,
 # som kör wifi_update.serve() innan den här filen någonsin startar.
@@ -17,6 +17,7 @@ import time
 
 from machine import WDT
 
+import button
 import clock
 import hw
 import mqtt_link
@@ -88,15 +89,22 @@ async def watchdog_task():
         await asyncio.sleep(1)
 
 
-# --- Statuslampor: grönt = allt uppe, rött = fel/inte redo ---
+# --- Statuslampor: grönt = allt uppe, rött = fel/inte redo,
+# orange (båda tända) = huvudbrytaren av ---
 
-async def led_task(mqtt):
+async def led_task(mqtt, get_irrigation):
     while True:
-        # I lokal drift (molnsynk av) krävs ingen MQTT-anslutning för grönt.
-        mqtt_ok = mqtt.connected or not mqtt.enabled
-        ok = net.is_connected() and mqtt_ok and clock.synced
-        hw.green_led.value(1 if ok else 0)
-        hw.red_led.value(0 if ok else 1)
+        if not get_irrigation():
+            # Bevattning AV är ett medvetet användarval och ska synas;
+            # eventuella fel visas igen så fort bevattningen slås på.
+            hw.green_led.value(1)
+            hw.red_led.value(1)
+        else:
+            # I lokal drift (molnsynk av) krävs ingen MQTT-anslutning för grönt.
+            mqtt_ok = mqtt.connected or not mqtt.enabled
+            ok = net.is_connected() and mqtt_ok and clock.synced
+            hw.green_led.value(1 if ok else 0)
+            hw.red_led.value(0 if ok else 1)
         await asyncio.sleep(1)
 
 
@@ -197,7 +205,11 @@ async def main():
     asyncio.create_task(
         watersensor.poll_task(mqtt.publish_sensor, make_heartbeat("sensor"))
     )
-    asyncio.create_task(led_task(mqtt))
+    asyncio.create_task(led_task(mqtt, get_irrigation))
+
+    button.init(valves, get_irrigation, apply_irrigation,
+                mqtt.publish_irrigation, can_run)
+    asyncio.create_task(button.button_task())
 
     print("Webbserver på http://%s/ (http://%s.local/)"
           % (net.ip(), net.HOSTNAME))

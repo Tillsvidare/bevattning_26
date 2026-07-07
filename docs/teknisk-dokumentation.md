@@ -35,7 +35,7 @@ Principer:
   `devices/{device_id}/` i MQTT och `/api/devices/{device_id}/` i API:t.
   Ägarskap kontrolleras per anrop; andras enheter ger 404.
 - **Lokal drift är alltid möjlig:** enheten fungerar utan molnet
-  (se §7.6) och molnet utan enheten (visar offline + senaste kända data).
+  (se §7.7) och molnet utan enheten (visar offline + senaste kända data).
 
 ## 2. Produktionsmiljön
 
@@ -165,17 +165,18 @@ Boot 2: mqtt_link ansluter TLS 8883 ──► availability=online ──► syns
 
 Moduler: `boot.py` (OTA-/räddningsläge), `main.py` (orkestrering),
 `net.py` (WiFi), `clock.py` (NTP + svensk tid), `scheduler.py` (ventiler),
-`watersensor.py`, `mqtt_link.py`, `provision.py`, `webui.py` (Microdot),
-`wifi_setup.py` (AP-portal), `wifi_update.py` (AP-server/captive portal),
-`ota_update.py`, `storage.py` (config/schedule/settings på flash),
-`hw.py`, `lib/` (vendorerad microdot + umqtt).
+`watersensor.py`, `button.py` (knappen i drift), `mqtt_link.py`,
+`provision.py`, `webui.py` (Microdot), `wifi_setup.py` (AP-portal),
+`wifi_update.py` (AP-server/captive portal), `ota_update.py`,
+`storage.py` (config/schedule/settings på flash), `hw.py`,
+`lib/` (vendorerad microdot + umqtt).
 
 ### 7.1 Uppstart
 1. Ladda config (saknas → AP-portalen; §7.3), schema, inställningar.
 2. Pulsa båda ventilerna stängda (känt läge) **före** WDT.
 3. WiFi (`net.connect`, timeout 180 s → portal-fallback; §7.3).
 4. Ev. provisionering (§6). 5. WDT + tasks: klocka, MQTT, schemaläggare,
-   sensor, webUI, LED.
+   sensor, webUI, LED, knapp.
 
 ### 7.2 Watchdog
 Hårdvaru-WDT 30 s, startas efter WiFi. `watchdog_task` matar varje sekund
@@ -215,7 +216,20 @@ historik-outbox (50 poster) som spolas när länken är uppe. TLS via
 — sockelpill efter TLS-wrap kräver AttributeError-fallback (watchdogen är
 skyddsnätet mot evig blockering).
 
-### 7.6 Lokal drift
+### 7.6 Knappen och lamporna i drift (`button.py`)
+Kort tryck (0,1–3 s) togglar huvudbrytaren — samma väg som appens bock
+(spara på flash + eka retained till molnet), kort pip som kvittens.
+Långt tryck (≥ 3 s; summern piper vid tröskeln = "släpp nu") startar
+10 min manuell bevattning på båda ventilerna, eller stoppar en pågående
+körning (`ValveController.cancel`). Manuell start kräver samma grind som
+schemat (huvudbrytare PÅ + torr sensor) — annars dubbelpip = vägrat.
+Avgörandet kort/långt sker på släpp; 50 ms-pollen ger debounce. Krockar
+inte med OTA-betydelsen: `boot.py` läser knappen bara ~500 ms vid
+strömpåslag. Lampor: grönt = allt uppe, rött = fel/inte redo, **orange**
+(båda tända) = huvudbrytaren av (medvetet val, döljer ev. felstatus tills
+bevattningen slås på igen).
+
+### 7.7 Lokal drift
 Tom kopplingskod i portalen → ingen molnkoppling alls. Kryssrutan
 "Molnsynk" i lokala webUI:t kopplar ner snyggt (explicit offline-publish),
 köar historik och återsynkar vid påslag. WiFi/NTP krävs alltid (schemat

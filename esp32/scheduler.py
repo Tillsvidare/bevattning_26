@@ -26,6 +26,7 @@ class ValveController:
         self._lock = asyncio.Lock()
         self.is_open = False
         self.busy = False  # en pågående irrigate-cykel; nya starter hoppas över
+        self.cancel = False  # sätts utifrån (knappen) för att avbryta i förtid
 
     async def open(self):
         async with self._lock:
@@ -51,6 +52,7 @@ class ValveController:
             print("valve %d: bevattning pågår redan, hoppar över" % self.valve_id)
             return
         self.busy = True
+        self.cancel = False
         print("valve %d: bevattning %d min" % (self.valve_id, minutes))
         try:
             await self.open()
@@ -62,6 +64,9 @@ class ValveController:
                     if self._should_run and not self._should_run():
                         print("valve %d: stoppad (huvudbrytare av eller våt "
                               "sensor), avbryter" % self.valve_id)
+                        break
+                    if self.cancel:
+                        print("valve %d: avbruten med knappen" % self.valve_id)
                         break
                     await asyncio.sleep_ms(500)
             finally:

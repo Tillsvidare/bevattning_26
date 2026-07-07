@@ -550,6 +550,11 @@ window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () 
   if (lastData) renderChart(lastData.segmentsByValve, lastData.dayStarts);
 });
 
+/* PWA: service workern gör appen installerbar på hemskärmen. */
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/sw.js").catch(() => {});
+}
+
 /* ---------- Start: kräver inloggning + minst en enhet ---------- */
 
 (async () => {

@@ -131,7 +131,8 @@ def run():
     if r.status_code != 200:
         r.close()
         raise OSError("HTTP %d för manifestet" % r.status_code)
-    manifest = ujson.loads(r.text)
+    manifest_text = r.text
+    manifest = ujson.loads(manifest_text)
     r.close()
 
     files = manifest["files"]
@@ -153,6 +154,12 @@ def run():
         except OSError:
             pass
         os.rename(name + ".tmp", name)
+
+    # Sist: spara det färska manifestet så den lokala kopian (som bl.a.
+    # provision.py läser fw_version ur) speglar den nu installerade koden.
+    with open("manifest.json.tmp", "w") as f:
+        f.write(manifest_text)
+    os.rename("manifest.json.tmp", "manifest.json")
     try:
         os.sync()
     except AttributeError:

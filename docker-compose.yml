@@ -1,23 +1,54 @@
 services:
+  caddy:
+    image: caddy:2
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    restart: unless-stopped
+
   mosquitto:
     image: eclipse-mosquitto:2
+    entrypoint: ["/bin/sh", "/mosquitto/entrypoint.sh"]
+    environment:
+      - MQTT_DOMAIN=${MQTT_DOMAIN:-bevattning.tillsvidare.eu}
+    # Endast TLS-porten publiceras — 1883 finns bara i compose-nätet.
     ports:
-      - "1883:1883"
+      - "8883:8883"
     volumes:
       - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ./mosquitto/acl:/mosquitto/config/acl:ro
+      - ./mosquitto/entrypoint.sh:/mosquitto/entrypoint.sh:ro
       - mosquitto-data:/mosquitto/data
+      - mqtt-auth:/mqtt-auth
+      - caddy-data:/caddy-data:ro
+    depends_on:
+      - caddy
     restart: unless-stopped
 
   backend:
     build: ./backend
-    ports:
-      - "8000:8000"
+    # Ingen publicerad port — nås via Caddy (reverse proxy i compose-nätet).
     environment:
       - MQTT_HOST=mosquitto
       - MQTT_PORT=1883
+      - MQTT_USER=backend
+      - MQTT_PASSWORD=${MQTT_PASSWORD}
       - DB_PATH=/data/irrigation.db
+      - SECRET_KEY=${SECRET_KEY}
+      - COOKIE_SECURE=1
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - MOSQ_PASSWD_FILE=/mqtt-auth/passwd
+      - MQTT_PUBLIC_HOST=${MQTT_DOMAIN:-bevattning.tillsvidare.eu}
+      - MQTT_PUBLIC_PORT=8883
+      - MQTT_PUBLIC_TLS=1
     volumes:
       - backend-data:/data
+      - mqtt-auth:/mqtt-auth
     depends_on:
       - mosquitto
     restart: unless-stopped
@@ -25,3 +56,6 @@ services:
 volumes:
   mosquitto-data:
   backend-data:
+  caddy-data:
+  caddy-config:
+  mqtt-auth:

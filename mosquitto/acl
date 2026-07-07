@@ -1,0 +1,6 @@
+# Backend (superuser för devices-trädet) ser alla enheter.
+user backend
+topic readwrite devices/#
+
+# Varje enhet (username = device-id) kommer bara åt sitt eget namespace.
+pattern readwrite devices/%u/#

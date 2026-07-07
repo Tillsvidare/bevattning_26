@@ -87,7 +87,10 @@
 <dialog id="add-device-modal">
   <h2>Lägg till enhet</h2>
   <p>Din kopplingskod (gäller i 24 timmar):</p>
-  <p class="claim-code" id="claim-code">……</p>
+  <div class="claim-row">
+    <p class="claim-code" id="claim-code">……</p>
+    <button type="button" id="claim-copy" class="ghost small" hidden>Kopiera</button>
+  </div>
   <ol class="add-steps">
     <li>Koppla in bevattningsenheten i ett eluttag.</li>
     <li>Anslut mobilen till WiFi-nätet <strong>bevattning-setup</strong> som enheten skapar.</li>

@@ -149,6 +149,9 @@ async function openAddDevice() {
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const claim = await r.json();
     claimCodeEl.textContent = claim.code;
+    const copyBtn = document.getElementById("claim-copy");
+    copyBtn.hidden = !navigator.clipboard;
+    copyBtn.textContent = "Kopiera";
     claimStatus.textContent = "Väntar på enheten …";
   } catch (e) {
     claimStatus.className = "save-status err";
@@ -179,6 +182,18 @@ async function openAddDevice() {
 }
 
 document.getElementById("add-device-btn").addEventListener("click", openAddDevice);
+
+document.getElementById("claim-copy").addEventListener("click", async (e) => {
+  const code = claimCodeEl.textContent.trim();
+  if (!code.startsWith("KOD-")) return;
+  try {
+    await navigator.clipboard.writeText(code);
+    e.target.textContent = "Kopierad ✓";
+    setTimeout(() => { e.target.textContent = "Kopiera"; }, 2000);
+  } catch {
+    e.target.textContent = "Kunde inte kopiera";
+  }
+});
 document.getElementById("claim-close").addEventListener("click", () => {
   if (claimPoll) clearInterval(claimPoll);
   claimPoll = null;

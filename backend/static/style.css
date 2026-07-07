@@ -160,6 +160,9 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.45); }
   text-align: center; margin: 0.5rem 0;
   padding: 0.5rem; border: 1px dashed var(--baseline); border-radius: 8px;
 }
+.claim-row { display: flex; gap: 0.5rem; align-items: center; }
+.claim-row .claim-code { flex: 1; }
+.claim-row .ghost { width: auto; margin: 0; white-space: nowrap; }
 .add-steps { padding-left: 1.25rem; font-size: 0.9rem; color: var(--text-secondary); }
 .add-steps li { margin: 0.4rem 0; }
 table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }

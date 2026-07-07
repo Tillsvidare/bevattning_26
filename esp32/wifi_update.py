@@ -383,12 +383,15 @@ def _dns_reply(query, ip):
     )
 
 
-def serve_forever(handle):
+def serve_forever(handle, timeout_s=None):
     """Bring up the AP and serve HTTP + captive-portal DNS forever.
 
     handle(conn) serves one connection; if it returns truthy the device is
     reset after the connection closes (used by wifi_setup after a saved
-    config). Only returns via machine.reset()."""
+    config). With timeout_s set, the device resets after that many seconds
+    WITHOUT portal activity — used by the WiFi-change fallback so a portal
+    nobody touches cycles back to retrying the stored network (a router
+    that was merely rebooting heals itself). Only returns via machine.reset()."""
     ap = _start_ap()
     ip = ap.ifconfig()[0]
 
@@ -402,9 +405,16 @@ def serve_forever(handle):
     dns.bind(("0.0.0.0", DNS_PORT))
 
     print('anslut till WiFi "%s", adress http://%s' % (AP_SSID, ip))
+    last_activity = time.time()
     while True:
         try:
-            readable, _, _ = select.select([tcp, dns], [], [])
+            readable, _, _ = select.select([tcp, dns], [], [], 1)
+            if readable:
+                last_activity = time.time()
+            elif timeout_s and time.time() - last_activity > timeout_s:
+                print("portal: ingen aktivitet pa %d s, startar om" % timeout_s)
+                time.sleep(0.3)
+                machine.reset()
             if dns in readable:
                 query, addr = dns.recvfrom(256)
                 reply = _dns_reply(query, ip)

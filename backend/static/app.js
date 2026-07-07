@@ -46,6 +46,15 @@ function api(path, opts) {
 
 const deviceSelect = document.getElementById("device-select");
 const deviceName = document.getElementById("device-name");
+const deviceStatus = document.getElementById("device-status");
+
+function fmtLastSeen(ts) {
+  const d = parseUtc(ts);
+  const today = new Date();
+  return d.toDateString() === today.toDateString()
+    ? fmtTime(d)
+    : `${fmtDate(d)} ${fmtTime(d)}`;
+}
 
 function renderDeviceBar() {
   deviceSelect.innerHTML = "";
@@ -59,6 +68,14 @@ function renderDeviceBar() {
   deviceSelect.hidden = devices.length < 2;
   const current = devices.find((d) => d.id === deviceId);
   deviceName.textContent = devices.length === 1 && current ? current.name : "";
+  if (current) {
+    deviceStatus.className = "dev-status " + (current.online ? "online" : "offline");
+    deviceStatus.textContent = current.online
+      ? "online"
+      : "offline" + (current.last_seen ? ` — senast ${fmtLastSeen(current.last_seen)}` : "");
+  } else {
+    deviceStatus.textContent = "";
+  }
 }
 
 async function refreshDevices() {
@@ -553,6 +570,7 @@ window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () 
   setInterval(loadSensor, 10 * 1000);
   setInterval(loadHistory, 60 * 1000);
   setInterval(updateHealth, 30 * 1000);
+  setInterval(() => refreshDevices().catch(() => {}), 30 * 1000);
   setInterval(() => {
     /* Uppdatera inte mitt i en pågående eko-pollning (toggeln är då disabled
        med "skickar/väntar"-status som inte får skrivas över). */

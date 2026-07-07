@@ -50,7 +50,7 @@ footer { margin-top: 2em; color: #666; font-size: 0.85em; }
 <label>WiFi-l&ouml;senord (tomt f&ouml;r &ouml;ppet n&auml;t)</label>
 <input name="password" type="password">
 <label>Kopplingskod fr&aring;n molntj&auml;nsten
-(tomt = endast lokal drift)</label>
+(tomt = beh&aring;ll nuvarande koppling / endast lokal drift)</label>
 <input name="claim_code" autocapitalize="characters" autocomplete="off"
        placeholder="KOD-XXXXXX">
 <button>Spara och starta om</button>
@@ -151,20 +151,27 @@ def _form_decode(body):
     return fields
 
 
-def _parse_config(fields):
+def _parse_config(fields, existing=None):
     """Validera formuläret -> config-dict. Kastar ValueError med svenskt
-    felmeddelande vid ogiltig inmatning."""
+    felmeddelande vid ogiltig inmatning.
+
+    Med existing (WiFi-bytesläget): utgå från den gamla configen så att
+    molnkopplingen (device_id/credentials) överlever ett rent WiFi-byte.
+    Anges en ny kopplingskod rensas gamla credentials — annars skulle
+    main.py:s grind (claim_code utan mqtt_password) aldrig provisionera om.
+    """
     ssid = fields.get("ssid", "").strip()
     if not ssid:
         raise ValueError("SSID saknas")
-    # Tom kod är ok: endast lokal drift. Med kod provisionerar main.py
-    # MQTT-uppgifterna från molnet efter första WiFi-anslutningen
-    # (provision.py); host/port/credentials skrivs då in i configen.
-    return {
-        "wifi_ssid": ssid,
-        "wifi_password": fields.get("password", ""),
-        "claim_code": fields.get("claim_code", "").strip().upper(),
-    }
+    cfg = dict(existing) if existing else {}
+    cfg["wifi_ssid"] = ssid
+    cfg["wifi_password"] = fields.get("password", "")
+    code = fields.get("claim_code", "").strip().upper()
+    if code:
+        cfg["claim_code"] = code
+        for key in ("device_id", "mqtt_user", "mqtt_password", "mqtt_host"):
+            cfg.pop(key, None)
+    return cfg
 
 
 def _save_config(cfg):
@@ -176,7 +183,7 @@ def _save_config(cfg):
         pass
 
 
-def _handle(conn, ssids):
+def _handle(conn, ssids, existing):
     reader = _Reader(conn)
     req = read_request(reader)
     if not req:
@@ -192,7 +199,7 @@ def _handle(conn, ssids):
         return False
     if method == "POST":
         try:
-            cfg = _parse_config(_form_decode(reader.read(length)))
+            cfg = _parse_config(_form_decode(reader.read(length)), existing)
         except ValueError as e:
             _send_text(conn, b"400 Bad Request", str(e))
             return False
@@ -204,9 +211,20 @@ def _handle(conn, ssids):
     return False
 
 
-def serve():
+# Portal i WiFi-bytesläget: starta om efter så här lång inaktivitet och prova
+# det sparade nätet igen (en router som bara var omstartad läker sig själv).
+PORTAL_IDLE_TIMEOUT_S = 600
+
+
+def serve(existing=None):
     """Starta accesspunkten och servera formuläret tills en giltig config
-    sparats; serve_forever startar då om enheten. Återvänder aldrig."""
+    sparats; serve_forever startar då om enheten. Återvänder aldrig.
+
+    existing: nuvarande config när portalen öppnats för att WiFi:t inte
+    nåtts (main.py-fallbacken) — bevarar molnkopplingen och ger portalen
+    en inaktivitets-timeout så gamla nätet provas igen med jämna mellanrum.
+    """
     ssids = _scan_ssids()  # skanna innan AP:n tar över radion
     print("SETUP MODE: formularet oppnas automatiskt vid anslutning")
-    serve_forever(lambda conn: _handle(conn, ssids))
+    serve_forever(lambda conn: _handle(conn, ssids, existing),
+                  timeout_s=PORTAL_IDLE_TIMEOUT_S if existing else None)

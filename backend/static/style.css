@@ -129,6 +129,11 @@ a.button-link {
   padding: 0.35rem 0.75rem; font-size: 0.85rem;
 }
 
+.dev-status { font-size: 0.85rem; }
+.dev-status::before { content: "●"; margin-right: 0.3rem; }
+.dev-status.online { color: var(--series-2); }
+.dev-status.offline { color: #d03b3b; }
+
 /* ---------- Inloggning ---------- */
 
 .auth-root { max-width: 26rem; }

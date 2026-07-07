@@ -1,6 +1,7 @@
 # WiFi STA-anslutning med retry/backoff.
 
 import asyncio
+import time
 
 import network
 
@@ -53,13 +54,22 @@ async def _try_connect(ssid, password):
     return False
 
 
-async def connect(cfg):
-    """Blocka tills WiFi är uppe (med backoff mellan försök)."""
+async def connect(cfg, timeout_s=None):
+    """Blocka tills WiFi är uppe (med backoff mellan försök).
+
+    Med timeout_s: ge upp efter så många sekunder och returnera False —
+    main.py startar då inställningsportalen istället för att vänta evigt
+    (routerbyte hos en vän). Utan timeout: vänta tills det lyckas."""
     delay = RETRY_INITIAL_S
+    start = time.ticks_ms()
     while not await _try_connect(cfg["wifi_ssid"], cfg["wifi_password"]):
+        if timeout_s and time.ticks_diff(time.ticks_ms(), start) >= timeout_s * 1000:
+            print("net: ingen kontakt på %ds, ger upp" % timeout_s)
+            return False
         print("net: anslutning misslyckades, nytt försök om %ds" % delay)
         await asyncio.sleep(delay)
         delay = min(delay * 2, RETRY_MAX_S)
+    return True
 
 
 async def monitor_task(cfg):

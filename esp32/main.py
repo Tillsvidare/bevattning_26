@@ -28,6 +28,8 @@ import watersensor
 import webui
 
 WATCHDOG_TIMEOUT_MS = 30000
+# Utan WiFi-kontakt så här länge vid uppstart öppnas inställningsportalen.
+WIFI_PORTAL_AFTER_S = 180
 # MQTT-tasken får generöst fönster: en blockerande reconnect kan ta sekunder.
 # Sensor-pollen grindar ventilstyrningen och WDT-övervakas därför också.
 HEARTBEAT_TIMEOUT_MS = {"mqtt": 15000, "scheduler": 15000, "sensor": 15000}
@@ -108,7 +110,16 @@ async def main():
     # WiFi först: WDT kan inte startas här, för net.connect kan vänta
     # godtyckligt länge (egen backoff) och heartbeats skulle åldras —
     # enheten skulle boot-loopa varje gång nätet är nere.
-    await net.connect(config)
+    #
+    # Ingen kontakt inom fönstret = nätet är troligen bytt/borta: öppna
+    # inställningsportalen (molnkopplingen bevaras; tom kod = WiFi-byte).
+    # Portalen har egen inaktivitets-timeout -> reset -> nytt försök här,
+    # så en router som bara var omstartad läker sig själv.
+    if not await net.connect(config, timeout_s=WIFI_PORTAL_AFTER_S):
+        print("Ingen WiFi-kontakt på %ds: startar inställningsportalen"
+              % WIFI_PORTAL_AFTER_S)
+        import wifi_setup
+        wifi_setup.serve(existing=config)  # återvänder aldrig
     asyncio.create_task(net.monitor_task(config))
 
     wdt = WDT(timeout=WATCHDOG_TIMEOUT_MS)

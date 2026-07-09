@@ -209,7 +209,7 @@ function entryRow(entry) {
   row.className = "entry-row";
   row.innerHTML =
     '<input type="time" name="start" required>' +
-    '<input type="number" name="duration_min" min="1" max="180" required>' +
+    '<span class="dur"><input type="number" name="duration_min" min="1" max="180" required>min</span>' +
     '<input type="checkbox" class="switch" name="enabled">' +
     '<button type="button" class="remove" title="Ta bort" aria-label="Ta bort">✕</button>';
   row.querySelector('[name="start"]').value = entry.start;
@@ -223,6 +223,10 @@ function renderEntries(form, entries) {
   const box = form.querySelector(".entries");
   box.innerHTML = "";
   for (const entry of entries) box.appendChild(entryRow(entry));
+  const count = form.querySelector(".sched-count");
+  if (count) count.textContent = entries.length
+    ? (entries.length === 1 ? "1 schema" : `${entries.length} scheman`)
+    : "";
   renderNextRun();
 }
 
@@ -544,13 +548,13 @@ async function loadSensor() {
   try {
     const r = await api("/sensor");
     if (!r.ok) {
-      sensorStatus.className = "muted sensor";
-      sensorStatus.textContent = "";
+      sensorStatus.className = "chip-val sensor";
+      sensorStatus.textContent = "—";
       return;
     }
     const s = await r.json();
-    sensorStatus.className = s.wet ? "sensor wet" : "muted sensor";
-    sensorStatus.textContent = s.wet ? "Sensor: VÅT — bevattning stoppad" : "Sensor: torr";
+    sensorStatus.className = s.wet ? "chip-val sensor wet" : "chip-val sensor";
+    sensorStatus.textContent = s.wet ? "VÅT — stoppad" : "Torr";
   } catch {
     /* backend nere — lämna som det är */
   }

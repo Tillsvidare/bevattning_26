@@ -77,8 +77,8 @@ function renderDeviceBar() {
   if (current) {
     deviceStatus.className = "dev-status " + (current.online ? "online" : "offline");
     deviceStatus.textContent = current.online
-      ? "online"
-      : "offline" + (current.last_seen ? ` — senast ${fmtLastSeen(current.last_seen)}` : "");
+      ? "Ansluten · online"
+      : "Offline" + (current.last_seen ? ` · senast ${fmtLastSeen(current.last_seen)}` : "");
   } else {
     deviceStatus.textContent = "";
   }

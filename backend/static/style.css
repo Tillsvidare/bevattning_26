@@ -202,10 +202,15 @@ a.button-link {
   padding: 0.35rem 0.75rem; font-size: 0.85rem;
 }
 
-.dev-status { font-size: 0.85rem; }
-.dev-status::before { content: "●"; margin-right: 0.3rem; }
-.dev-status.online { color: var(--series-2); }
-.dev-status.offline { color: #d03b3b; }
+.dev-status {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  font-size: 0.8rem; font-weight: 600;
+  padding: 0.3rem 0.7rem; border-radius: 999px;
+}
+.dev-status:empty { display: none; }
+.dev-status::before { content: "●"; font-size: 0.7em; }
+.dev-status.online { color: var(--series-2); background: rgba(27, 175, 122, 0.14); }
+.dev-status.offline { color: #d03b3b; background: rgba(208, 59, 59, 0.12); }
 
 /* ---------- Inloggning ---------- */
 

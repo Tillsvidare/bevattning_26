@@ -241,8 +241,8 @@ enhets-id och provisioneringsstatus (`/api/device`).
 - `login.html` — inloggning/registrering (inbjudningskod).
 - `index.html` + `app.js` — huvudapp: online-status (LWT-driven, poll
   30 s), namnbyte (PATCH), enhetsväljare (>1 enhet), huvudbrytare, sensor,
-  schemaredigering med eko-bekräftelse ("Sparat på enheten ✓"), 7-dagars
-  Chart.js-diagram, claim-modal med livepollning. 401 → login.
+  schemaredigering med autospar och eko-bekräftelse ("Sparat på enheten ✓"),
+  7-dagars Chart.js-diagram, claim-modal med livepollning. 401 → login.
 - `admin.html` — inbjudningar, användare (lösenordsreset), enhetslista.
 - `onboarding.html` / `manual.html` — kundmaterial, utskriftsvänliga.
 - **PWA:** `manifest.json` + ikoner + minimal service worker (ingen

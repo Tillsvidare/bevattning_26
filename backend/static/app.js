@@ -214,15 +214,21 @@ function entryRow(entry) {
     '<button type="button" class="remove" title="Ta bort" aria-label="Ta bort">✕</button>';
   row.querySelector('[name="start"]').value = entry.start;
   row.querySelector('[name="duration_min"]').value = entry.duration_min;
-  const toggle = row.querySelector('[name="enabled"]');
-  toggle.checked = entry.enabled;
-  /* Vippknappen ska verka direkt (som huvudbrytaren) — spara vid toggling
-     istället för att kräva ett extra tryck på Spara. */
-  toggle.addEventListener("change", () => {
+  row.querySelector('[name="enabled"]').checked = entry.enabled;
+  /* Alla ändringar autosparas — det finns ingen Spara-knapp. change (inte
+     input) så halvskrivna värden inte skickas mitt i redigeringen. */
+  for (const input of row.querySelectorAll("input")) {
+    input.addEventListener("change", () => {
+      renderNextRun();
+      queueSave(row.closest("form"));
+    });
+  }
+  row.querySelector(".remove").addEventListener("click", () => {
+    const form = row.closest("form");
+    row.remove();
     renderNextRun();
-    row.closest("form").requestSubmit();
+    queueSave(form);
   });
-  row.querySelector(".remove").addEventListener("click", () => row.remove());
   return row;
 }
 
@@ -298,13 +304,49 @@ function sameSchedule(a, b) {
   return a && b && JSON.stringify(a) === JSON.stringify(b);
 }
 
+/* Autospar: debounce:a tätt följande ändringar (spinnerklick m.m.) och
+   serialisera POST:arna — en ändring under pågående eko-pollning köas och
+   sparas när den är klar. requestSubmit kör HTML-valideringen först. */
+const saveTimers = new WeakMap();
+const saveState = new WeakMap(); // form -> {saving, pending, dirty}
+
+function formState(form) {
+  if (!saveState.has(form)) saveState.set(form, {});
+  return saveState.get(form);
+}
+
+function queueSave(form) {
+  formState(form).dirty = true;
+  clearTimeout(saveTimers.get(form));
+  saveTimers.set(form, setTimeout(() => form.requestSubmit(), 800));
+}
+
+/* Sidan göms (appbyte på mobilen, stängd flik) mitt i debounce-fönstret:
+   skicka direkt istället för att tappa ändringen. keepalive på POST:en
+   låter den gå iväg även när sidan är på väg bort. */
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState !== "hidden") return;
+  document.querySelectorAll("form[data-valve]").forEach((form) => {
+    if (formState(form).dirty) {
+      clearTimeout(saveTimers.get(form));
+      form.requestSubmit();
+    }
+  });
+});
+
 async function saveSchedule(form) {
+  const state = formState(form);
+  if (state.saving) {
+    state.pending = true;
+    return;
+  }
+  state.saving = true;
+  state.dirty = false;
+
   const id = form.dataset.valve;
   const status = form.querySelector(".save-status");
-  const button = form.querySelector('button[type="submit"]');
   const wanted = scheduleFromForm(form);
 
-  button.disabled = true;
   status.className = "save-status muted";
   status.textContent = "Skickar …";
   try {
@@ -312,6 +354,7 @@ async function saveSchedule(form) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(wanted),
+      keepalive: true,
     });
     if (!r.ok) {
       const detail = (await r.json().catch(() => ({}))).detail;
@@ -319,23 +362,32 @@ async function saveSchedule(form) {
     }
     /* Vänta på enhetens eko via /schedule/status → GET tills det matchar. */
     status.textContent = "Skickat — väntar på enheten …";
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 8 && !state.pending; i++) {
       await new Promise((res) => setTimeout(res, 1000));
       const echoed = await fetchSchedule(id);
       if (sameSchedule(echoed, wanted)) {
-        renderEntries(form, echoed);
+        /* Rita bara om formuläret om användaren inte hunnit ändra något —
+           annars skulle den nya (osparade) redigeringen skrivas över. */
+        if (sameSchedule(scheduleFromForm(form), wanted)) {
+          renderEntries(form, echoed);
+        }
         status.className = "save-status ok";
         status.textContent = "Sparat på enheten ✓";
-        button.disabled = false;
-        return;
+        break;
+      }
+      if (i === 7) {
+        status.textContent = "Skickat, men enheten har inte bekräftat ännu.";
       }
     }
-    status.textContent = "Skickat, men enheten har inte bekräftat ännu.";
   } catch (e) {
     status.className = "save-status err";
     status.textContent = `Fel: ${e.message}`;
   }
-  button.disabled = false;
+  state.saving = false;
+  if (state.pending) {
+    state.pending = false;
+    form.requestSubmit();
+  }
 }
 
 /* ---------- Historik -> intervall ---------- */
@@ -618,6 +670,8 @@ document.querySelectorAll("form[data-valve]").forEach((form) => {
       return;
     }
     box.appendChild(entryRow({ start: "06:00", duration_min: 15, enabled: true }));
+    renderNextRun();
+    queueSave(form);
   });
 });
 

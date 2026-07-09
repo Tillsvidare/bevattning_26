@@ -69,7 +69,7 @@ Vattensensor: <span id="sstat">...</span>
 <button type="button" class="add" onclick="add('1')">+ L&auml;gg till</button></fieldset>
 <fieldset><legend>Ventil 2</legend><div id="v2"></div>
 <button type="button" class="add" onclick="add('2')">+ L&auml;gg till</button></fieldset>
-<button type="submit">Spara</button> <span id="status"></span>
+<span id="status"></span>
 </form>
 <script>
 var MAX=6,st=document.getElementById('status');
@@ -78,11 +78,11 @@ function row(e){var d=document.createElement('div');d.className='row';
   ' min <input type="checkbox"><button type="button" class="x">&#10005;</button>';
  var i=d.querySelectorAll('input');
  i[0].value=e.start;i[1].value=e.duration_min;i[2].checked=e.enabled;
- i[2].onchange=saveNow;
- d.querySelector('.x').onclick=function(){d.remove()};return d}
+ i[0].onchange=i[1].onchange=i[2].onchange=saveNow;
+ d.querySelector('.x').onclick=function(){d.remove();saveNow()};return d}
 function add(v){var b=document.getElementById('v'+v);
  if(b.children.length>=MAX){st.className='err';st.textContent='Max '+MAX+' per dygn';return}
- b.appendChild(row({start:'06:00',duration_min:15,enabled:true}))}
+ b.appendChild(row({start:'06:00',duration_min:15,enabled:true}));saveNow()}
 fetch('/api/schedule').then(function(r){return r.json()}).then(function(s){
  for(var v=1;v<=2;v++){var b=document.getElementById('v'+v);
   (s[String(v)]||[]).forEach(function(e){b.appendChild(row(e))})}});
@@ -126,13 +126,19 @@ function save(){
   document.getElementById('v'+v).children,function(d){var i=d.querySelectorAll('input');
    return {start:i[0].value,duration_min:parseInt(i[1].value),enabled:i[2].checked}})}
  st.className='';st.textContent='Sparar...';
- fetch('/api/schedule',{method:'POST',
+ fetch('/api/schedule',{method:'POST',keepalive:true,
   headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
  .then(function(r){if(!r.ok)throw new Error(r.status);st.textContent='Sparat'})
  .catch(function(e){st.className='err';st.textContent='Fel: '+e.message})}
 f.onsubmit=function(ev){ev.preventDefault();save()};
-/* Kryssrutan pa/av ska verka direkt: spara vid toggling, utan Spara-knappen. */
-function saveNow(){f.requestSubmit?f.requestSubmit():save()}
+/* Alla andringar autosparas (debounce mot tata klick); requestSubmit
+   kor HTML-valideringen fore POST:en. Goms sidan mitt i fonstret
+   (appbyte pa mobilen) skickas direkt sa andringen inte tappas. */
+var tmr=null;
+function submitNow(){tmr=null;if(f.requestSubmit)f.requestSubmit();else save()}
+function saveNow(){clearTimeout(tmr);tmr=setTimeout(submitNow,800)}
+document.addEventListener('visibilitychange',function(){
+ if(document.visibilityState==='hidden'&&tmr){clearTimeout(tmr);submitNow()}});
 </script></body></html>
 """
 

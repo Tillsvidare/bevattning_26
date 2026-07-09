@@ -78,6 +78,7 @@ function row(e){var d=document.createElement('div');d.className='row';
   ' min <input type="checkbox"><button type="button" class="x">&#10005;</button>';
  var i=d.querySelectorAll('input');
  i[0].value=e.start;i[1].value=e.duration_min;i[2].checked=e.enabled;
+ i[2].onchange=saveNow;
  d.querySelector('.x').onclick=function(){d.remove()};return d}
 function add(v){var b=document.getElementById('v'+v);
  if(b.children.length>=MAX){st.className='err';st.textContent='Max '+MAX+' per dygn';return}
@@ -118,7 +119,8 @@ function pollSensor(){fetch('/api/sensor').then(function(r){return r.json()})
   el.style.fontWeight=s.wet?'bold':'normal'})
  .catch(function(){})}
 pollSensor();setInterval(pollSensor,10000);
-document.getElementById('f').onsubmit=function(ev){ev.preventDefault();
+var f=document.getElementById('f');
+function save(){
  var body={};
  for(var v=1;v<=2;v++){body[String(v)]=[].map.call(
   document.getElementById('v'+v).children,function(d){var i=d.querySelectorAll('input');
@@ -127,7 +129,10 @@ document.getElementById('f').onsubmit=function(ev){ev.preventDefault();
  fetch('/api/schedule',{method:'POST',
   headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
  .then(function(r){if(!r.ok)throw new Error(r.status);st.textContent='Sparat'})
- .catch(function(e){st.className='err';st.textContent='Fel: '+e.message})};
+ .catch(function(e){st.className='err';st.textContent='Fel: '+e.message})}
+f.onsubmit=function(ev){ev.preventDefault();save()};
+/* Kryssrutan pa/av ska verka direkt: spara vid toggling, utan Spara-knappen. */
+function saveNow(){f.requestSubmit?f.requestSubmit():save()}
 </script></body></html>
 """
 

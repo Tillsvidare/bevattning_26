@@ -214,7 +214,14 @@ function entryRow(entry) {
     '<button type="button" class="remove" title="Ta bort" aria-label="Ta bort">✕</button>';
   row.querySelector('[name="start"]').value = entry.start;
   row.querySelector('[name="duration_min"]').value = entry.duration_min;
-  row.querySelector('[name="enabled"]').checked = entry.enabled;
+  const toggle = row.querySelector('[name="enabled"]');
+  toggle.checked = entry.enabled;
+  /* Vippknappen ska verka direkt (som huvudbrytaren) — spara vid toggling
+     istället för att kräva ett extra tryck på Spara. */
+  toggle.addEventListener("change", () => {
+    renderNextRun();
+    row.closest("form").requestSubmit();
+  });
   row.querySelector(".remove").addEventListener("click", () => row.remove());
   return row;
 }

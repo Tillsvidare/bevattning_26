@@ -38,12 +38,22 @@
   </header>
 
   <section class="card master-card">
-    <label class="master">
-      <input type="checkbox" id="irrigation-toggle" disabled>
-      <strong>Bevattning</strong>
-    </label>
-    <span id="irrigation-status" class="muted" role="status">hämtar …</span>
-    <span id="sensor-status" class="muted sensor" role="status"></span>
+    <div class="master-top">
+      <div>
+        <span class="master-eyebrow">Huvudbrytare</span>
+        <label class="master">
+          <strong>Bevattning</strong>
+          <span id="irrigation-status" role="status">hämtar …</span>
+        </label>
+      </div>
+      <input type="checkbox" id="irrigation-toggle" class="switch switch-lg" disabled>
+    </div>
+    <div class="master-chips">
+      <div class="chip"><span class="chip-label">Sensor</span>
+        <span id="sensor-status" class="chip-val sensor" role="status"></span></div>
+      <div class="chip"><span class="chip-label">Nästa bevattning</span>
+        <span id="next-run" class="chip-val">—</span></div>
+    </div>
   </section>
 
   <section class="cards">

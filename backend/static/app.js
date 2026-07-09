@@ -210,7 +210,7 @@ function entryRow(entry) {
   row.innerHTML =
     '<input type="time" name="start" required>' +
     '<input type="number" name="duration_min" min="1" max="180" required>' +
-    '<input type="checkbox" name="enabled">' +
+    '<input type="checkbox" class="switch" name="enabled">' +
     '<button type="button" class="remove" title="Ta bort" aria-label="Ta bort">✕</button>';
   row.querySelector('[name="start"]').value = entry.start;
   row.querySelector('[name="duration_min"]').value = entry.duration_min;
@@ -223,6 +223,32 @@ function renderEntries(form, entries) {
   const box = form.querySelector(".entries");
   box.innerHTML = "";
   for (const entry of entries) box.appendChild(entryRow(entry));
+  renderNextRun();
+}
+
+/* Nästa aktiverade schemalagda start över alla ventiler (idag el. imorgon). */
+function nextRun() {
+  const now = new Date(), nowMin = now.getHours() * 60 + now.getMinutes();
+  let best = null;
+  document.querySelectorAll("form[data-valve]").forEach((form) => {
+    for (const row of form.querySelectorAll(".entry-row")) {
+      if (!row.querySelector('[name="enabled"]').checked) continue;
+      const t = row.querySelector('[name="start"]').value;
+      if (!t) continue;
+      const [h, m] = t.split(":").map(Number);
+      let d = h * 60 + m - nowMin;
+      if (d < 0) d += 1440;                    // annars imorgon
+      if (!best || d < best.d) best = { d, time: t, valve: form.dataset.valve };
+    }
+  });
+  return best;                                 // {time:"18:30", valve:"1"} eller null
+}
+
+function renderNextRun() {
+  const el = document.getElementById("next-run");
+  if (!el) return;
+  const n = nextRun();
+  el.textContent = n ? `${n.time} · Ventil ${n.valve}` : "Inget schema";
 }
 
 async function loadSchedule(form) {

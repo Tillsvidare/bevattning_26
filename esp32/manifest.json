@@ -1,5 +1,5 @@
 {
- "version": "2026-07-07 17:22",
+ "version": "2026-07-09 11:06",
  "files": {
   "boot.py": "f3a098eb6a0a86431f7b975e57c68d7f483cf2d178deb43f68e17ed1091c7090",
   "button.py": "065a72d2b7b7279bc43895ec9df6f66dc99a449888c67f983863cabb4ab1a16d",
@@ -16,7 +16,7 @@
   "scheduler.py": "1f9291ce16c42c4fd6e2a8ac97cf158cc8f2fe9431f56f54619a0f8a0ec29baa",
   "storage.py": "e4bd97af18e57ba9be12cf9186c20ec19766fd96098d825f251aa2b12b623973",
   "watersensor.py": "806c8855e57ab0bcf53aec7828525b64c28e8d401dc1497637f5a23b3c4f50a6",
-  "webui.py": "ef28b5eac781e75c30827ff79ba96b9280a067c18e3f81a9f7934f0bde339230",
+  "webui.py": "9244771b680aa71d3e48ec2bd4122fb901bd3c501b8036b7c67167f201761d9b",
   "wifi_setup.py": "cd9d523a1406deacc744fd93a1df7f97b15c397ea1a85d74199a98d52ff0353e",
   "wifi_update.py": "b15584d38ec9f29ee5932cd909d89dde82f66b7fc888942a68fc3877a356dc25"
  }

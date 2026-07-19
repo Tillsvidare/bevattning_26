@@ -57,15 +57,27 @@
   </section>
 
   <section class="cards">
-    <form class="card" data-valve="1">
-      <h2><span class="swatch swatch-1"></span>Ventil 1<span class="sched-count"></span></h2>
+    <form class="card valve-1" data-valve="1">
+      <div class="card-head">
+        <div>
+          <span class="card-eyebrow">Schema</span>
+          <h2><span class="swatch swatch-1"></span>Ventil 1</h2>
+        </div>
+        <span class="sched-count"></span>
+      </div>
       <div class="entries"></div>
       <button type="button" class="add-entry ghost">+ Lägg till bevattning</button>
       <p class="save-status muted" role="status"></p>
     </form>
 
-    <form class="card" data-valve="2">
-      <h2><span class="swatch swatch-2"></span>Ventil 2<span class="sched-count"></span></h2>
+    <form class="card valve-2" data-valve="2">
+      <div class="card-head">
+        <div>
+          <span class="card-eyebrow">Schema</span>
+          <h2><span class="swatch swatch-2"></span>Ventil 2</h2>
+        </div>
+        <span class="sched-count"></span>
+      </div>
       <div class="entries"></div>
       <button type="button" class="add-entry ghost">+ Lägg till bevattning</button>
       <p class="save-status muted" role="status"></p>
@@ -73,13 +85,23 @@
   </section>
 
   <section class="card chart-card">
-    <h2>Senaste 7 dagarna</h2>
+    <div class="card-head">
+      <div>
+        <span class="card-eyebrow">Historik</span>
+        <h2>Senaste 7 dagarna</h2>
+      </div>
+    </div>
     <p class="muted">När och hur länge bevattningen varit igång (lokal tid).</p>
     <div class="chart-wrap"><canvas id="history-chart" aria-label="Bevattningshistorik senaste 7 dagarna" role="img"></canvas></div>
   </section>
 
   <section class="card">
-    <h2>Körningar</h2>
+    <div class="card-head">
+      <div>
+        <span class="card-eyebrow">Historik</span>
+        <h2>Körningar</h2>
+      </div>
+    </div>
     <div class="table-wrap">
       <table id="history-table">
         <thead><tr><th>Ventil</th><th>Datum</th><th>Start</th><th>Stopp</th><th>Längd</th></tr></thead>
